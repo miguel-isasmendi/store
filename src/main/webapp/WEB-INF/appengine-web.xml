@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+	<application>negrolas-store</application>
+	<version>1</version>
+	<threadsafe>true</threadsafe>
+	<runtime>java8</runtime>
+
+	<env-variables>
+		<env-var name="ENDPOINTS_SERVICE_NAME"
+			value="negrolas-api.endpoints.${endpoints.project.id}.cloud.goog" />
+		<env-var name="ENDPOINTS_SERVICE_VERSION" value="2017-10-23r0" />
+		<env-var name="DEFAULT_ENCODING" value="UTF-8" />
+	</env-variables>
+
+	<system-properties>
+		<property name="java.util.logging.config.file" value="WEB-INF/logging.properties" />
+		<property name="file.encoding" value="UTF-8" />
+		<property name="DEFAULT_ENCODING" value="UTF-8" />
+	</system-properties>
+
+</appengine-web-app>

@@ -1,0 +1,119 @@
+package com.store.domain.api.regular;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.api.server.spi.ServiceException;
+import com.google.api.server.spi.auth.common.User;
+import com.google.api.server.spi.config.ApiMethod;
+import com.google.api.server.spi.config.Named;
+import com.google.api.server.spi.config.Nullable;
+import com.google.api.server.spi.response.BadRequestException;
+import com.google.api.server.spi.response.ConflictException;
+import com.google.api.server.spi.response.NotFoundException;
+import com.google.inject.Inject;
+import com.store.architecture.exception.annotation.ExceptionMapping;
+import com.store.architecture.exception.dao.ConflictDaoException;
+import com.store.architecture.exception.dao.InvalidArgumentsDaoException;
+import com.store.architecture.exception.dao.NotFoundDaoException;
+import com.store.architecture.exception.validation.RequestBusinessValidationException;
+import com.store.architecture.model.ResponseListContainer;
+import com.store.architecture.model.ResponseListContainer.ResponseListContainerBuilder;
+import com.store.architecture.validator.ObjectBuildConversionOverseer;
+import com.store.domain.architecture.api.regular.FirebaseRegularUserAuthenticationProtectedApi;
+import com.store.domain.model.product.build.coordinator.ProductBuildCoordinatorProvider;
+import com.store.domain.model.product.build.validator.ProductCreationValidatorProvider;
+import com.store.domain.model.product.data.FullProductData;
+import com.store.domain.model.product.data.ProductCreationData;
+import com.store.domain.model.product.dto.FullProductDto;
+import com.store.domain.model.product.dto.ProductCreationDto;
+import com.store.domain.model.product.dto.ProductCreationListDto;
+import com.store.domain.model.sku.build.coordinator.SkuBuildCoordinatorProvider;
+import com.store.domain.model.sku.build.validator.SkuCreationValidatorProvider;
+import com.store.domain.model.sku.data.SkuCreationData;
+import com.store.domain.model.sku.dto.SkuCreationDto;
+import com.store.domain.model.sku.dto.SkuDto;
+import com.store.domain.model.user.data.UserData;
+import com.store.domain.service.catalog.CatalogCoordinatorService;
+import com.store.domain.service.user.UserService;
+
+import lombok.NonNull;
+
+@ExceptionMapping(from = RequestBusinessValidationException.class, to = BadRequestException.class)
+@ExceptionMapping(from = NotFoundDaoException.class, to = NotFoundException.class)
+@ExceptionMapping(from = ConflictDaoException.class, to = ConflictException.class)
+public class CatalogApi extends FirebaseRegularUserAuthenticationProtectedApi {
+	private CatalogCoordinatorService catalogCoordinatorService;
+	private UserService userService;
+
+	@Inject
+	public CatalogApi(@NonNull CatalogCoordinatorService catalogCoordinatorService, @NonNull UserService userService) {
+		this.catalogCoordinatorService = catalogCoordinatorService;
+		this.userService = userService;
+	}
+
+	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/products")
+	public ResponseListContainer<FullProductDto> createProduct(@NonNull User user,
+			@NonNull ProductCreationListDto productRegistrationDtoList) throws ServiceException {
+
+		List<ProductCreationData> productsRegistrationDatas = null;
+		UserData storeUser = this.userService.getByFirebaseId(user.getId());
+
+		ObjectBuildConversionOverseer<ProductCreationDto, ProductCreationData> translationOverseer = ObjectBuildConversionOverseer
+				.<ProductCreationDto, ProductCreationData>builder()
+				.preBuildValidator(ProductCreationValidatorProvider::validateDtoToDataTranslation)
+				.buildClosure(ProductBuildCoordinatorProvider::buildToData).build();
+
+		productsRegistrationDatas = productRegistrationDtoList.getItems().stream()
+				.map(productCreationDto -> translationOverseer.execute()).collect(Collectors.toList());
+
+		List<FullProductData> createdProducts = catalogCoordinatorService.createProduct(storeUser.getUserId(),
+				productsRegistrationDatas.toArray(new ProductCreationData[productsRegistrationDatas.size()]));
+
+		ResponseListContainerBuilder<FullProductDto> responseContainerBuilder = ResponseListContainer
+				.<FullProductDto>builder();
+
+		responseContainerBuilder.items(
+				createdProducts.stream().map(ProductBuildCoordinatorProvider::toDto).collect(Collectors.toList()));
+
+		return responseContainerBuilder.build();
+	}
+
+	@ApiMethod(httpMethod = ApiMethod.HttpMethod.GET, path = "/store/products/{product_id}")
+	public FullProductDto getProduct(User user, @Named("product_id") Long productId) throws ServiceException {
+
+		return ProductBuildCoordinatorProvider.toDto(catalogCoordinatorService.getProductById(productId));
+	}
+
+	@ApiMethod(httpMethod = ApiMethod.HttpMethod.GET, path = "/store/products")
+	public ResponseListContainer<Object> getProductList(@NonNull User user,
+			@Nullable @Named("includeSkus") Boolean shouldIncludeSkus) throws ServiceException {
+
+		Boolean haveToDeliverFatRepresentation = Boolean.TRUE.equals(shouldIncludeSkus);
+		ResponseListContainerBuilder<Object> productsResponse = ResponseListContainer.<Object>builder();
+
+		if (haveToDeliverFatRepresentation) {
+			productsResponse.items(catalogCoordinatorService.getFullProducts().stream()
+					.map(ProductBuildCoordinatorProvider::toDto).collect(Collectors.toList()));
+		} else {
+			productsResponse.items(catalogCoordinatorService.getProducts());
+		}
+
+		return productsResponse.build();
+	}
+
+	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/cactus/products/{product_id}/skus")
+	@ExceptionMapping(from = InvalidArgumentsDaoException.class, to = NotFoundException.class)
+	public SkuDto createSku(@NonNull User user, @NonNull @Named("product_id") Long productId,
+			@NonNull SkuCreationDto skuRegistrationDto) throws ServiceException {
+		UserData storeUser = this.userService.getByFirebaseId(user.getId());
+
+		SkuCreationData skuCreationData = ObjectBuildConversionOverseer.<SkuCreationDto, SkuCreationData>builder()
+				.preBuildValidator(SkuCreationValidatorProvider::validateDtoToDataTranslation)
+				.buildClosure(overseer -> SkuBuildCoordinatorProvider.toData(overseer.getInputObject(), productId))
+				.build().execute();
+
+		return SkuBuildCoordinatorProvider
+				.toDto(catalogCoordinatorService.createSku(storeUser.getUserId(), skuCreationData));
+	}
+}
