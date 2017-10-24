@@ -30,8 +30,8 @@ import lombok.NonNull;
 public class SendGridMailService implements EmailService {
 	private static final Logger logger = Logger.getLogger(SendGridMailService.class.getName());
 
-	private static final String NAME_REPLACEABLE_PATTERN = "%NOMBRE%";
-	private static final String VALIDATION_CODE_REPLACEABLE_PATTERN = "%CODIGO%";
+	private static final String NAME_REPLACEABLE_PATTERN = "%FIRST_NAME%";
+	private static final String VERIFICATION_CODE_REPLACEABLE_PATTERN = "%VERIFICATION_CODE%";
 
 	private String genericSenderEmail;
 	private String verificationCodeTemplateId;
@@ -42,7 +42,7 @@ public class SendGridMailService implements EmailService {
 	public SendGridMailService(@Named("emails.generic.sender") String genericSender,
 			@Named("emails.verification.code.templateId") String verificationCodeTemplateId,
 			@Named("emails.welcome.templateId") String welcomeTemplateId,
-			@Named("emails.sendgrid.apikey") String sendgridApikey) {
+			@Named("sendgrid.api.key") String sendgridApikey) {
 		this.genericSenderEmail = genericSender;
 
 		this.verificationCodeTemplateId = verificationCodeTemplateId;
@@ -114,7 +114,7 @@ public class SendGridMailService implements EmailService {
 		HashMap<String, String> substitutionMap = new HashMap<String, String>();
 
 		substitutionMap.put(NAME_REPLACEABLE_PATTERN, userData.getFirstName());
-		substitutionMap.put(VALIDATION_CODE_REPLACEABLE_PATTERN, registrationCode);
+		substitutionMap.put(VERIFICATION_CODE_REPLACEABLE_PATTERN, registrationCode);
 
 		sendTemplateMail(TemplateEmailConfiguration.builder().recipientEmail(this.genericSenderEmail)
 				.receiverEmail(userData.getEmail()).templateId(verificationCodeTemplateId)

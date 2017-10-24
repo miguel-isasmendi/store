@@ -29,6 +29,14 @@ public class CacheHandler<T> {
 		return element;
 	}
 
+	public T putIntoCacheUsingPartialKey(T element) {
+		if (keyGeneratorClosure != null) {
+			return putIntoCache(element);
+		} else {
+			return putIntoCacheUsingPartialKey(null, element);
+		}
+	}
+
 	private void checkRequiredKeyGeneratorClosure() {
 		if (keyGeneratorClosure == null) {
 			throw new InvalidArgumentsServiceException("This method requires an existent key generator closure!");

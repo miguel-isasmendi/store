@@ -33,7 +33,7 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
 	public VerificationCodeData createPendingVerificationCode(@NonNull UserData user) {
 		VerificationCodeData verificationCode = null;
 
-		String registrationCode = RandomStringUtils.randomAlphanumeric(4).toUpperCase();
+		String registrationCode = RandomStringUtils.randomAlphanumeric(16);
 		logger.info("Created RegistrationCode = " + registrationCode);
 
 		VerificationCodeCreationData verificationCodeData = VerificationCodeCreationData.builder()

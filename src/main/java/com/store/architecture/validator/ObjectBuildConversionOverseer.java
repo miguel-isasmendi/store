@@ -11,16 +11,19 @@ import autovalue.shaded.com.google.common.common.base.Preconditions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 @Builder
 @Getter
+@Accessors(chain=true)
 public class ObjectBuildConversionOverseer<T, S> {
 
 	@SuppressWarnings("rawtypes")
 	public static final Function NO_OP_BUILD_CLOSURE = (overseer) -> ((ObjectBuildConversionOverseer) overseer)
 			.getInputObject();
 
-	@NonNull
+	@Setter
 	private T inputObject;
 	private S builtObject;
 
@@ -54,6 +57,10 @@ public class ObjectBuildConversionOverseer<T, S> {
 	}
 
 	public S execute() {
+		if (inputObject == null) {
+			throw new UnexpectedBuildException("The execution of the build conversion requires an inputObject");
+		}
+
 		if (preBuildValidator != null) {
 			doCheckIntegrityWith(preBuildValidator);
 		}

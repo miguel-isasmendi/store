@@ -1,22 +1,24 @@
 package com.store.domain.model.sku.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SkuCreationDto {
-
 	private Long skuId;
-	@NonNull
+	@Setter
 	private Long productId;
 	@NonNull
 	private String name;
 	@NonNull
 	private Double price;
-	@NonNull
-	private String currency;
 	@NonNull
 	private String description;
 }

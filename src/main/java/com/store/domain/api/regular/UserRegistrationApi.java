@@ -12,6 +12,8 @@ import com.store.architecture.exception.dao.NotFoundDaoException;
 import com.store.architecture.exception.service.ConflictServiceException;
 import com.store.architecture.exception.service.InvalidArgumentsServiceException;
 import com.store.architecture.exception.validation.RequestBusinessValidationException;
+import com.store.architecture.exception.validation.UnexpectedBuildException;
+import com.store.architecture.exception.validation.UnexpectedValidationException;
 import com.store.domain.architecture.api.regular.FirebaseRegularUserAuthenticationProtectedApi;
 import com.store.domain.model.user.data.UserData;
 import com.store.domain.model.validationCode.dto.VerificationCodeAcceptanceDto;
@@ -22,6 +24,8 @@ import lombok.NonNull;
 
 @ExceptionMapping(from = ConflictServiceException.class, to = ConflictException.class)
 @ExceptionMapping(from = RequestBusinessValidationException.class, to = BadRequestException.class)
+@ExceptionMapping(from = UnexpectedValidationException.class, to = BadRequestException.class)
+@ExceptionMapping(from = UnexpectedBuildException.class, to = BadRequestException.class)
 @ExceptionMapping(from = NotFoundDaoException.class, to = BadRequestException.class)
 public class UserRegistrationApi extends FirebaseRegularUserAuthenticationProtectedApi {
 
@@ -43,7 +47,7 @@ public class UserRegistrationApi extends FirebaseRegularUserAuthenticationProtec
 		userRegistrationService.sendVerificationCode(storeUser);
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.PUT, path = "/store/user/verification_code/acceptance", apiKeyRequired = AnnotationBoolean.TRUE)
+	@ApiMethod(httpMethod = ApiMethod.HttpMethod.PUT, path = "/store/users/me/verification_code/acceptance", apiKeyRequired = AnnotationBoolean.TRUE)
 	@ExceptionMapping(from = InvalidArgumentsServiceException.class, to = BadRequestException.class)
 	public void receiveVerificationCode(@NonNull User firebaseUser,
 			@NonNull VerificationCodeAcceptanceDto verificationCodeAcceptance) throws ServiceException {

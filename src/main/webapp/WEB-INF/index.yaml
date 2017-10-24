@@ -1,1 +1,6 @@
 indexes:
+- kind: PendingValidationCode
+  properties:
+    - name: userId
+    - name: validUntil
+      direction: desc

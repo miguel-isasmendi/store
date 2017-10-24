@@ -1,6 +1,5 @@
 package com.store.domain.model.product.data;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import lombok.Builder;
@@ -9,8 +8,7 @@ import lombok.NonNull;
 
 @Getter
 @Builder
-public class ProductData implements Serializable {
-	private static final long serialVersionUID = 1L;
+public class ProductData {
 
 	@NonNull
 	private Long productId;

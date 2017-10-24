@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.inject.Inject;
 import com.store.domain.model.product.build.coordinator.ProductBuildCoordinatorProvider;
 import com.store.domain.model.product.data.FullProductData;
 import com.store.domain.model.product.data.ProductCreationData;
@@ -21,19 +22,22 @@ public class CatalogCoordinatorServiceImpl implements CatalogCoordinatorService 
 	private ProductService productService;
 	private SkuService skuService;
 
+	@Inject
 	public CatalogCoordinatorServiceImpl(@NonNull ProductService productService, @NonNull SkuService skuService) {
 		this.productService = productService;
 		this.skuService = skuService;
 	}
 
 	@Override
-	public List<FullProductData> createProduct(Long userId, ProductCreationData... prodDataArray) {
+	public List<FullProductData> createProduct(@NonNull Long userId, ProductCreationData... prodDataArray) {
 
 		List<FullProductData> result = Arrays.asList(prodDataArray).stream().map(productCreationData -> {
 			ProductData productData = productService.create(userId, productCreationData).iterator().next();
 
-			List<SkuData> skuData = productCreationData.getSkus().stream()
-					.map(skuCreationData -> skuService.create(userId, skuCreationData)).collect(Collectors.toList());
+			List<SkuData> skuData = productCreationData.getSkus().stream().map((skuCreationData) -> {
+				skuCreationData.setProductId(productData.getProductId());
+				return skuService.create(userId, skuCreationData);
+			}).collect(Collectors.toList());
 
 			return ProductBuildCoordinatorProvider.toFullData(productData, skuData);
 		}).collect(Collectors.toList());
@@ -49,8 +53,9 @@ public class CatalogCoordinatorServiceImpl implements CatalogCoordinatorService 
 
 	@Override
 	public List<FullProductData> getFullProducts() {
-		return productService.getProducts().stream().map(productData -> ProductBuildCoordinatorProvider.toFullData(productData,
-				skuService.getSkusByProductId(productData.getProductId()))).collect(Collectors.toList());
+		return productService.getProducts().stream().map(productData -> ProductBuildCoordinatorProvider
+				.toFullData(productData, skuService.getSkusByProductId(productData.getProductId())))
+				.collect(Collectors.toList());
 	}
 
 	@Override

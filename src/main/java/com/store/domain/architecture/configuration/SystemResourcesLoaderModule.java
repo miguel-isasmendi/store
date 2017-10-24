@@ -16,6 +16,8 @@ import com.store.architecture.filter.CorsFilter;
 import com.store.architecture.filter.exception.CustomExceptionFilter;
 import com.store.domain.api.admin.EmailSenderApi;
 import com.store.domain.api.open.PublicRegistrationApi;
+import com.store.domain.api.regular.CatalogApi;
+import com.store.domain.api.regular.ClientApi;
 import com.store.domain.api.regular.UserRegistrationApi;
 import com.store.domain.api.regular.UsersApi;
 import com.store.domain.architecture.api.regular.FirebaseRegularUserAuthenticationProtectedApi;
@@ -47,6 +49,8 @@ public class SystemResourcesLoaderModule extends EndpointsModule {
 		// regular users APIs
 		bind(UsersApi.class).in(Scopes.SINGLETON);
 		bind(UserRegistrationApi.class).in(Scopes.SINGLETON);
+		bind(ClientApi.class).in(Scopes.SINGLETON);
+		bind(CatalogApi.class).in(Scopes.SINGLETON);
 
 		// public APIs
 		bind(PublicRegistrationApi.class).in(Scopes.SINGLETON);
@@ -55,7 +59,7 @@ public class SystemResourcesLoaderModule extends EndpointsModule {
 		bind(EmailSenderApi.class).in(Scopes.SINGLETON);
 
 		configureEndpoints(WHOLE_API_PATH, ImmutableList.of(PublicRegistrationApi.class, UsersApi.class,
-				UserRegistrationApi.class, EmailSenderApi.class));
+				UserRegistrationApi.class, EmailSenderApi.class, ClientApi.class, CatalogApi.class));
 
 	}
 

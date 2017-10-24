@@ -65,7 +65,7 @@ public class CachedProductService implements ProductService {
 
 			productIds = productDatas.stream().map(ProductData::getProductId).collect(Collectors.toList());
 
-			productIdsCacheHandler.putIntoCache(productIds);
+			productIdsCacheHandler.putIntoCacheUsingPartialKey(productIds);
 		} else {
 			productDatas = productIds.stream().map(productDao::getById).map(ProductBuildCoordinatorProvider::toData)
 					.collect(Collectors.toList());

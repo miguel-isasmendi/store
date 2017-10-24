@@ -25,6 +25,7 @@
 		<endpoints.management.version>1.0.3</endpoints.management.version>
 		<appengine.maven.plugin.version>1.3.1</appengine.maven.plugin.version>
 
+		<api.key.env.config.dir>config/env</api.key.env.config.dir>
 	</properties>
 
 	<prerequisites>
@@ -72,7 +73,7 @@
 			<id>GetSwaggerDoc</id>
 			<activation>
 				<property>
-					<name>BuildSwaggerDoc</name>
+					<name>BuildOpenApi</name>
 				</property>
 			</activation>
 			<build>
@@ -92,6 +93,7 @@
 								<argument>com.store.domain.api.regular.UserRegistrationApi</argument>
 								<argument>com.store.domain.api.regular.CatalogApi</argument>
 								<argument>com.store.domain.api.regular.UsersApi</argument>
+								<argument>com.store.domain.api.regular.ClientApi</argument>
 								<argument>com.store.domain.api.open.PublicRegistrationApi</argument>
 							</arguments>
 						</configuration>
@@ -272,6 +274,11 @@
 								<resource>
 									<directory>${env.config.dir}</directory>
 									<include>config.properties</include>
+									<filtering>true</filtering>
+								</resource>
+								<resource>
+									<directory>${api.key.env.config.dir}</directory>
+									<include>env.properties</include>
 									<filtering>true</filtering>
 								</resource>
 							</resources>

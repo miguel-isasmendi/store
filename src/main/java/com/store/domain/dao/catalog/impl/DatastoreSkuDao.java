@@ -8,12 +8,10 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
-import com.google.cloud.datastore.FullEntity;
+import com.google.cloud.datastore.FullEntity.Builder;
 import com.google.cloud.datastore.IncompleteKey;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.Query;
@@ -40,22 +38,24 @@ public class DatastoreSkuDao implements SkuDao {
 	private static String SKU_KIND = "Sku";
 
 	private static String SKU_PRODUCT_ID = "productId";
-	private static String SKU_DEFAULT = "default";
 	private static String SKU_MADE_INACTIVE_BY_SKU_ID = "madeInactiveBySkuId";
+	private static String SKU_BUNDLE_ID = "bundleId";
 
 	@Inject
-	public DatastoreSkuDao(Datastore datastore) {
+	public DatastoreSkuDao(@NonNull Datastore datastore) {
 		super();
 		this.datastore = datastore;
 	}
 
 	private Sku hidrateSkuFromEntity(Entity entity) {
-		return Sku.builder().skuId(entity.getKey().getId()).currency(entity.getString(DaoConstants.CURRENCY))
-				.description(entity.getString(DaoConstants.DESCRIPTION)).price(entity.getDouble(DaoConstants.PRICE))
+		return Sku.builder().skuId(entity.getKey().getId()).description(entity.getString(DaoConstants.DESCRIPTION))
+				.price(entity.getDouble(DaoConstants.PRICE)).name(entity.getString(DaoConstants.NAME))
 				.madeInactiveBySkuId((Long) entity.getValue(SKU_MADE_INACTIVE_BY_SKU_ID).get())
-				.isDefault(entity.getBoolean(SKU_DEFAULT)).createdOn(entity.getTimestamp(DaoConstants.CREATED_ON))
+				.isDefault(entity.getBoolean(DaoConstants.DEFAULT))
+				.createdOn(entity.getTimestamp(DaoConstants.CREATED_ON))
 				.createdByUserId(entity.getLong(DaoConstants.CREATED_BY_USER_ID))
-				.productId(entity.getLong(SKU_PRODUCT_ID)).build();
+				.bundleId((Long) entity.getValue(SKU_BUNDLE_ID).get()).productId(entity.getLong(SKU_PRODUCT_ID))
+				.build();
 	}
 
 	private List<Sku> makeSkuList(Iterator<Entity> entities) {
@@ -71,56 +71,49 @@ public class DatastoreSkuDao implements SkuDao {
 		Transaction txn = datastore.newTransaction();
 
 		try {
-
-			// Deactivating other skus with the same code
-			QueryResults<Entity> queryResults = datastore
-					.run(Query.newEntityQueryBuilder().setKind(SKU_KIND)
-							.setFilter(CompositeFilter.and(PropertyFilter.eq(SKU_PRODUCT_ID, skuData.getProductId()),
-									PropertyFilter.eq(DaoConstants.KEY_FIELD,
-											datastore.newKeyFactory().setKind(SKU_KIND).newKey(skuData.getSkuId()))))
-							.build());
-
-			if (!queryResults.hasNext()) {
-				throw new NotFoundDaoException(ErrorConstants.formatError(
-						ErrorConstants.ELEMENT_NOT_FOUND_FOR_ARGUMENTS, SKU_KIND,
-						"skuId = \"" + skuData.getSkuId() + "\", " + "productId = \"" + skuData.getProductId() + "\""));
-			}
-
-			Entity alreadySavedSkuEntity = queryResults.next();
-
-			Sku alreadySavedSku = makeSkuList(Arrays.asList(alreadySavedSkuEntity).iterator()).iterator().next();
-
-			if (alreadySavedSku.getMadeInactiveBySkuId() != null) {
-				throw new InvalidArgumentsDaoException(
-						ErrorConstants.formatError(ErrorConstants.CANT_INVALIDATE_ELEMENT_UNTIL_ACTIVE, SKU_KIND));
-			}
-
-			// if they are really different, I modify the old version
-			if (!StringUtils.equals(alreadySavedSku.getCurrency(), skuData.getCurrency())
-					|| !alreadySavedSku.getPrice().equals(skuData.getPrice())) {
-
-				// Saving new sku
-				FullEntity<IncompleteKey> entity = Entity.newBuilder()
-						.setKey(datastore.newKeyFactory().setKind(SKU_KIND).newKey())
-						.set(DaoConstants.CURRENCY, skuData.getCurrency()).set(DaoConstants.PRICE, skuData.getPrice())
-						.set(DaoConstants.DESCRIPTION, skuData.getDescription())
-						.set(SKU_PRODUCT_ID, skuData.getProductId()).setNull(SKU_MADE_INACTIVE_BY_SKU_ID)
-						.set(SKU_DEFAULT, alreadySavedSku.getIsDefault()).set(DaoConstants.CREATED_ON, Timestamp.now())
-						.set(DaoConstants.CREATED_BY_USER_ID, userId).build();
-
-				Entity savedEntity = datastore.put(entity);
-
-				// Modifying old sku
-				datastore.update(Entity.newBuilder(alreadySavedSkuEntity)
-						.set(SKU_MADE_INACTIVE_BY_SKU_ID, savedEntity.getKey().getId()).build());
-
-				txn.commit();
-
-				return makeSkuList(Arrays.asList(savedEntity).iterator()).get(0);
-
+			if (skuData.getSkuId() == null) {
+				return hidrateSkuFromEntity(saveNewSku(userId, skuData, Boolean.FALSE, null));
 			} else {
-				throw new ConflictDaoException(
-						ErrorConstants.formatError(ErrorConstants.SAME_ELEMENT_CONFLICT, SKU_KIND));
+				// Deactivating other skus with the same code
+				QueryResults<Entity> queryResults = datastore.run(Query.newEntityQueryBuilder().setKind(SKU_KIND)
+						.setFilter(CompositeFilter.and(PropertyFilter.eq(SKU_PRODUCT_ID, skuData.getProductId()),
+								PropertyFilter.eq(DaoConstants.KEY_FIELD,
+										datastore.newKeyFactory().setKind(SKU_KIND).newKey(skuData.getSkuId()))))
+						.build());
+
+				if (!queryResults.hasNext()) {
+					throw new NotFoundDaoException(ErrorConstants
+							.formatError(ErrorConstants.ELEMENT_NOT_FOUND_FOR_ARGUMENTS, SKU_KIND, "skuId = \""
+									+ skuData.getSkuId() + "\", " + "productId = \"" + skuData.getProductId() + "\""));
+				}
+
+				Entity alreadySavedSkuEntity = queryResults.next();
+
+				Sku alreadySavedSku = makeSkuList(Arrays.asList(alreadySavedSkuEntity).iterator()).iterator().next();
+
+				if (alreadySavedSku.getMadeInactiveBySkuId() != null) {
+					throw new InvalidArgumentsDaoException(
+							ErrorConstants.formatError(ErrorConstants.CANT_INVALIDATE_ELEMENT_UNTIL_ACTIVE, SKU_KIND));
+				}
+
+				// if they are really different, I modify the old version
+				if (!alreadySavedSku.getPrice().equals(skuData.getPrice())) {
+
+					Entity savedEntity = saveNewSku(userId, skuData, alreadySavedSku.getIsDefault(),
+							alreadySavedSku.getBundleId());
+
+					// Modifying old sku
+					datastore.update(Entity.newBuilder(alreadySavedSkuEntity)
+							.set(SKU_MADE_INACTIVE_BY_SKU_ID, savedEntity.getKey().getId()).build());
+
+					txn.commit();
+
+					return hidrateSkuFromEntity(savedEntity);
+
+				} else {
+					throw new ConflictDaoException(
+							ErrorConstants.formatError(ErrorConstants.SAME_ELEMENT_CONFLICT, SKU_KIND));
+				}
 			}
 
 		} finally {
@@ -128,6 +121,24 @@ public class DatastoreSkuDao implements SkuDao {
 				txn.rollback();
 			}
 		}
+	}
+
+	private Entity saveNewSku(@NonNull Long userId, @NonNull SkuCreationData skuData, @NonNull Boolean isDefault,
+			Long bundleId) {
+		Builder<IncompleteKey> builder = Entity.newBuilder()
+				.setKey(datastore.newKeyFactory().setKind(SKU_KIND).newKey())
+				.set(DaoConstants.PRICE, skuData.getPrice()).set(DaoConstants.DESCRIPTION, skuData.getDescription())
+				.set(DaoConstants.NAME, skuData.getName()).set(SKU_PRODUCT_ID, skuData.getProductId())
+				.setNull(SKU_MADE_INACTIVE_BY_SKU_ID).set(DaoConstants.DEFAULT, isDefault)
+				.set(DaoConstants.CREATED_ON, Timestamp.now()).set(DaoConstants.CREATED_BY_USER_ID, userId);
+
+		if (bundleId == null) {
+			builder.setNull(SKU_BUNDLE_ID);
+		} else {
+			builder.set(SKU_BUNDLE_ID, bundleId);
+		}
+
+		return datastore.put(builder.build());
 	}
 
 	@Override

@@ -14,6 +14,8 @@ import lombok.Singular;
 public class ProductCreationData {
 	@NonNull
 	private String name;
+	@NonNull
+	private String description;
 	@Singular("sku")
 	private List<SkuCreationData> skus;
 }

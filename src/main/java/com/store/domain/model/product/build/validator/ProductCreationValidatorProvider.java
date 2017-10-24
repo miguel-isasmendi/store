@@ -16,8 +16,11 @@ public class ProductCreationValidatorProvider {
 		overseer.checkArgument(!StringUtils.isBlank(productDto.getName()),
 				ErrorConstants.formatError(ErrorConstants.ATTRIBUTE_SHOULD_NOT_BE_EMPTY, "name"));
 
+		overseer.checkArgument(!StringUtils.isBlank(productDto.getDescription()),
+				ErrorConstants.formatError(ErrorConstants.ATTRIBUTE_SHOULD_NOT_BE_EMPTY, "description"));
+
 		overseer.checkArgument(!CollectionUtils.isEmpty(productDto.getSkus()),
-				ErrorConstants.formatError(ErrorConstants.ATTRIBUTE_SHOULD_NOT_BE_EMPTY_FOR_OBJECT, "product", "sku"));
+				ErrorConstants.formatError(ErrorConstants.ATTRIBUTE_SHOULD_NOT_BE_EMPTY_FOR_OBJECT, "product", "skus"));
 
 		productDto.getSkus().stream()
 				.forEach(skuCreationDto -> SkuCreationValidatorProvider.validate(skuCreationDto, overseer));

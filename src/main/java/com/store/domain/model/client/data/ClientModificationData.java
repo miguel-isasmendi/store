@@ -8,9 +8,8 @@ import lombok.NonNull;
 @Builder
 public class ClientModificationData {
 	@NonNull
+	private Long clientId;
 	private String firstName;
-	@NonNull
 	private String lastName;
-	@NonNull
 	private String email;
 }

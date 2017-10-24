@@ -12,12 +12,11 @@ public class SkuDto {
 	private Long skuId;
 	@NonNull
 	private Long productId;
+	private Long bundleId;
 	@NonNull
 	private String name;
 	@NonNull
 	private Double price;
-	@NonNull
-	private String currency;
 	@NonNull
 	private String description;
 }

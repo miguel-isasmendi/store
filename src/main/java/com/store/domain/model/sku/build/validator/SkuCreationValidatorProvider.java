@@ -16,9 +16,9 @@ public class SkuCreationValidatorProvider {
 
 	@SuppressWarnings("rawtypes")
 	public static void validate(SkuCreationDto skuDto, ObjectBuildConversionOverseer overseer) {
+		overseer.checkArgument(!StringUtils.isBlank(skuDto.getName()),
+				ErrorConstants.formatError(ErrorConstants.ATTRIBUTE_SHOULD_NOT_BE_EMPTY, "name"));
 
-		overseer.checkArgument(!StringUtils.isBlank(skuDto.getCurrency()),
-				ErrorConstants.formatError(ErrorConstants.ATTRIBUTE_SHOULD_NOT_BE_EMPTY, "currency"));
 		overseer.checkArgument(!StringUtils.isBlank(skuDto.getDescription()),
 				ErrorConstants.formatError(ErrorConstants.ATTRIBUTE_SHOULD_NOT_BE_EMPTY, "description"));
 

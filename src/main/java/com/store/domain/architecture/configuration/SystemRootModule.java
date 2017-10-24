@@ -18,9 +18,11 @@ public class SystemRootModule extends AbstractModule {
 
 		Properties properties = new Properties();
 		try {
-			properties.load(this.getClass().getClassLoader().getResourceAsStream("config.properties"));
+			properties.load(this.getClass().getClassLoader().getResourceAsStream("env.properties"));
 			Names.bindProperties(binder(), properties);
 
+			properties.load(this.getClass().getClassLoader().getResourceAsStream("config.properties"));
+			Names.bindProperties(binder(), properties);
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new RuntimeException("unable to load properties file", e);

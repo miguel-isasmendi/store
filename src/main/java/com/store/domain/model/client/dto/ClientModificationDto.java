@@ -1,16 +1,16 @@
 package com.store.domain.model.client.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClientModificationDto {
-	@NonNull
 	private String firstName;
-	@NonNull
 	private String lastName;
-	@NonNull
 	private String email;
 }

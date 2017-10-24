@@ -17,16 +17,13 @@ public class Sku implements Serializable {
 	private Long skuId;
 	@NonNull
 	private Long productId;
+	private Long bundleId;
 	@NonNull
 	private String name;
-	@NonNull
-	private String currency;
 	@NonNull
 	private Double price;
 	@NonNull
 	private String description;
-	@NonNull
-	private Long skuTypeId;
 	@NonNull
 	private Boolean isDefault;
 	@NonNull

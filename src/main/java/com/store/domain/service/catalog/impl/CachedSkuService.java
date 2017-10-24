@@ -35,7 +35,7 @@ public class CachedSkuService implements SkuService {
 	}
 
 	@Override
-	public SkuData create(@NonNull Long userId, SkuCreationData skuData) {
+	public SkuData create(@NonNull Long userId, @NonNull SkuCreationData skuData) {
 		Sku sku = skuDao.create(skuData, userId);
 
 		skuCacheHandler.putIntoCache(sku);

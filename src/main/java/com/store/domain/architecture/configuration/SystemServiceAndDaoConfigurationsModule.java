@@ -12,10 +12,24 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.store.domain.architecture.dao.schema.MigrationDao;
 import com.store.domain.architecture.dao.schema.impl.DatastoreMigrationDao;
+import com.store.domain.dao.catalog.ProductDao;
+import com.store.domain.dao.catalog.SkuDao;
+import com.store.domain.dao.catalog.impl.DatastoreProductDao;
+import com.store.domain.dao.catalog.impl.DatastoreSkuDao;
+import com.store.domain.dao.client.ClientDao;
+import com.store.domain.dao.client.impl.DatastoreClientDao;
 import com.store.domain.dao.registration.UserPendingValidationCodeDao;
 import com.store.domain.dao.registration.impl.DatastoreUserPendingValidationCodeDao;
 import com.store.domain.dao.user.UserDao;
 import com.store.domain.dao.user.impl.DatastoreUserDao;
+import com.store.domain.service.catalog.CatalogCoordinatorService;
+import com.store.domain.service.catalog.ProductService;
+import com.store.domain.service.catalog.SkuService;
+import com.store.domain.service.catalog.impl.CachedProductService;
+import com.store.domain.service.catalog.impl.CachedSkuService;
+import com.store.domain.service.catalog.impl.CatalogCoordinatorServiceImpl;
+import com.store.domain.service.client.ClientService;
+import com.store.domain.service.client.impl.CachedClientService;
 import com.store.domain.service.email.EmailService;
 import com.store.domain.service.email.impl.SendGridMailService;
 import com.store.domain.service.firebase.FirebaseService;
@@ -36,6 +50,10 @@ public class SystemServiceAndDaoConfigurationsModule extends AbstractModule {
 
 		bind(UserService.class).to(CachedUserService.class).in(Scopes.SINGLETON);
 		bind(EmailService.class).to(SendGridMailService.class).in(Scopes.SINGLETON);
+		bind(ProductService.class).to(CachedProductService.class).in(Scopes.SINGLETON);
+		bind(SkuService.class).to(CachedSkuService.class).in(Scopes.SINGLETON);
+		bind(ClientService.class).to(CachedClientService.class).in(Scopes.SINGLETON);
+		bind(CatalogCoordinatorService.class).to(CatalogCoordinatorServiceImpl.class).in(Scopes.SINGLETON);
 
 		bind(UserRegistrationService.class).to(UserRegistrationServiceImpl.class).in(Scopes.SINGLETON);
 		bind(UserRegistrationCoordinatorService.class).to(UserRegistrationCoordinatorServiceImpl.class)
@@ -54,6 +72,9 @@ public class SystemServiceAndDaoConfigurationsModule extends AbstractModule {
 		// dao layer
 		bind(UserDao.class).to(DatastoreUserDao.class).in(Scopes.SINGLETON);
 		bind(UserPendingValidationCodeDao.class).to(DatastoreUserPendingValidationCodeDao.class).in(Scopes.SINGLETON);
+		bind(ProductDao.class).to(DatastoreProductDao.class).in(Scopes.SINGLETON);
+		bind(SkuDao.class).to(DatastoreSkuDao.class).in(Scopes.SINGLETON);
+		bind(ClientDao.class).to(DatastoreClientDao.class).in(Scopes.SINGLETON);
 
 		// Migration dao
 		// TODO should this be here?

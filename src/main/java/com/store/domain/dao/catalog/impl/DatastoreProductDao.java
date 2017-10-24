@@ -52,8 +52,10 @@ public class DatastoreProductDao implements ProductDao {
 			for (ProductCreationData prodData : prodDataArray) {
 				FullEntity<IncompleteKey> entity = Entity.newBuilder()
 						.setKey(datastore.allocateId(datastore.newKeyFactory().setKind(PRODUCT_KIND).newKey()))
-						.set(DaoConstants.NAME, prodData.getName()).set(DaoConstants.CREATED_BY_USER_ID, userId)
-						.set(DaoConstants.CREATED_ON, Timestamp.now()).build();
+						.set(DaoConstants.NAME, prodData.getName())
+						.set(DaoConstants.DESCRIPTION, prodData.getDescription())
+						.set(DaoConstants.CREATED_BY_USER_ID, userId).set(DaoConstants.CREATED_ON, Timestamp.now())
+						.build();
 				Entity product = datastore.put(entity);
 
 				productsResult.add(hidrateProductFromEntity(product));
