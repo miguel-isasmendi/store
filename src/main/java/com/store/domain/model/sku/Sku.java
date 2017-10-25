@@ -30,6 +30,8 @@ public class Sku implements Serializable {
 	private Long createdByUserId;
 	@NonNull
 	private Timestamp createdOn;
+	@NonNull
+	private SkuBillingType billingType;
 	private Long madeInactiveBySkuId;
 	private Timestamp validUntilDate;
 }

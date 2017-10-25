@@ -1,5 +1,7 @@
 package com.store.domain.model.sku.dto;
 
+import com.store.domain.model.sku.SkuBillingType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,4 +23,6 @@ public class SkuCreationDto {
 	private Double price;
 	@NonNull
 	private String description;
+	@NonNull
+	private SkuBillingType billingType;
 }

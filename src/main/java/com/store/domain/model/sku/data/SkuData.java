@@ -1,5 +1,7 @@
 package com.store.domain.model.sku.data;
 
+import com.store.domain.model.sku.SkuBillingType;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -19,4 +21,6 @@ public class SkuData {
 	private Double price;
 	@NonNull
 	private String description;
+	@NonNull
+	private SkuBillingType billingType;
 }

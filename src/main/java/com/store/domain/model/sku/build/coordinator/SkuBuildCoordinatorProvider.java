@@ -10,16 +10,19 @@ public class SkuBuildCoordinatorProvider {
 
 	public static SkuCreationData toData(SkuCreationDto sku) {
 		return SkuCreationData.builder().skuId(sku.getSkuId()).productId(sku.getProductId())
-				.description(sku.getDescription()).name(sku.getName()).price(sku.getPrice()).build();
+				.description(sku.getDescription()).name(sku.getName()).price(sku.getPrice())
+				.billingType(sku.getBillingType()).build();
 	}
 
 	public static SkuData toData(Sku sku) {
 		return SkuData.builder().skuId(sku.getSkuId()).productId(sku.getProductId()).description(sku.getDescription())
-				.name(sku.getName()).price(sku.getPrice()).bundleId(sku.getBundleId()).build();
+				.name(sku.getName()).price(sku.getPrice()).bundleId(sku.getBundleId()).billingType(sku.getBillingType())
+				.build();
 	}
 
 	public static SkuDto toDto(SkuData sku) {
 		return SkuDto.builder().skuId(sku.getSkuId()).productId(sku.getProductId()).description(sku.getDescription())
-				.name(sku.getName()).price(sku.getPrice()).bundleId(sku.getBundleId()).build();
+				.name(sku.getName()).price(sku.getPrice()).bundleId(sku.getBundleId()).billingType(sku.getBillingType())
+				.build();
 	}
 }

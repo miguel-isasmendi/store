@@ -27,6 +27,7 @@ import com.store.domain.dao.DaoConstants;
 import com.store.domain.dao.catalog.SkuDao;
 import com.store.domain.exception.ErrorConstants;
 import com.store.domain.model.sku.Sku;
+import com.store.domain.model.sku.SkuBillingType;
 import com.store.domain.model.sku.data.SkuCreationData;
 
 import lombok.NonNull;
@@ -40,6 +41,7 @@ public class DatastoreSkuDao implements SkuDao {
 	private static String SKU_PRODUCT_ID = "productId";
 	private static String SKU_MADE_INACTIVE_BY_SKU_ID = "madeInactiveBySkuId";
 	private static String SKU_BUNDLE_ID = "bundleId";
+	private static String SKU_BILLING_TYPE = "billingType";
 
 	@Inject
 	public DatastoreSkuDao(@NonNull Datastore datastore) {
@@ -55,7 +57,7 @@ public class DatastoreSkuDao implements SkuDao {
 				.createdOn(entity.getTimestamp(DaoConstants.CREATED_ON))
 				.createdByUserId(entity.getLong(DaoConstants.CREATED_BY_USER_ID))
 				.bundleId((Long) entity.getValue(SKU_BUNDLE_ID).get()).productId(entity.getLong(SKU_PRODUCT_ID))
-				.build();
+				.billingType(SkuBillingType.valueOf(entity.getString(SKU_BILLING_TYPE))).build();
 	}
 
 	private List<Sku> makeSkuList(Iterator<Entity> entities) {
@@ -130,7 +132,8 @@ public class DatastoreSkuDao implements SkuDao {
 				.set(DaoConstants.PRICE, skuData.getPrice()).set(DaoConstants.DESCRIPTION, skuData.getDescription())
 				.set(DaoConstants.NAME, skuData.getName()).set(SKU_PRODUCT_ID, skuData.getProductId())
 				.setNull(SKU_MADE_INACTIVE_BY_SKU_ID).set(DaoConstants.DEFAULT, isDefault)
-				.set(DaoConstants.CREATED_ON, Timestamp.now()).set(DaoConstants.CREATED_BY_USER_ID, userId);
+				.set(DaoConstants.CREATED_ON, Timestamp.now()).set(DaoConstants.CREATED_BY_USER_ID, userId)
+				.set(SKU_BILLING_TYPE, skuData.getBillingType().toString());
 
 		if (bundleId == null) {
 			builder.setNull(SKU_BUNDLE_ID);
