@@ -28,6 +28,7 @@ public class ErrorConstants {
 	public static final String DOESNT_MATCH_VALID_STATUS = "The statu values for this process are (%s)";
 	public static final String THE_ONLY_VALID_VALUE_IS = "The only valid value is %s";
 
+	public static final String AMOUNT_OF_DISCOUNTS_EXCEEDS_ORDER_TOTAL = "The amount of discounts should be less or equal to the total amount of the order";
 	public static final String SUM_OF_PAYMENTS_EXCEEDS_TOTAL_AMOUNT = "The sum of the payments informed exceeds the order total";
 	public static final String CANT_SET_STATUS_ORDER_SINCE = "Unable to update order status since %s";
 
@@ -35,6 +36,7 @@ public class ErrorConstants {
 	public static final String THE_USER_HAS_AN_EXPIRED_VERIFICATION_CODE = "THE_USER_HAS_AN_EXPIRED_VERIFICATION_CODE";
 	public static final String THE_VALIDATION_CODE_RECEIVED_IS_INVALID = "THE_VALIDATION_CODE_RECEIVED_IS_INVALID";
 	public static final String THE_USER_HAS_ALREADY_CONFIRMED_THE_MAIL = "THE_USER_HAS_ALREADY_CONFIRMED_THE_MAIL";
+	public static final String SHOULD_NOT_HAVE_REPEATED_ELEMENTS = "%s shouldn't have repeated values";
 
 	public static String formatError(String errorString, Object... errorArguments) {
 		return new String(String.format(errorString, errorArguments));

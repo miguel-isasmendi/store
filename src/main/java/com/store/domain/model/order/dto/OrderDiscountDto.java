@@ -1,8 +1,6 @@
-package com.store.domain.model.order;
+package com.store.domain.model.order.dto;
 
-import java.io.Serializable;
-
-import com.google.cloud.Timestamp;
+import java.util.Date;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -10,9 +8,7 @@ import lombok.NonNull;
 
 @Getter
 @Builder
-public class OrderDiscount implements Serializable {
-	private static final long serialVersionUID = 1L;
-
+public class OrderDiscountDto {
 	@NonNull
 	private Long orderId;
 	@NonNull
@@ -22,5 +18,5 @@ public class OrderDiscount implements Serializable {
 	@NonNull
 	private Long createdByUserId;
 	@NonNull
-	private Timestamp createdOn;
+	private Date createdOn;
 }

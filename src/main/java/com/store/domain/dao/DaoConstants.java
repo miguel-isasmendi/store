@@ -6,7 +6,6 @@ public class DaoConstants {
 	public static final String INVALID_FROM = "invalidFrom";
 	public static final String CREATED_BY_USER_ID = "createdByUserId";
 	public static final String STATUS = "status";
-	public static final String CURRENCY = "currency";
 	public static final String INACTIVE_FROM = "inactiveFrom";
 	public static final String VALID_UNTIL_DATE = "validUntil";
 	public static final String DEFAULT = "default";
@@ -21,4 +20,5 @@ public class DaoConstants {
 	public static final String QUANTITY = "quantity";
 	public static final String DATE = "date";
 	public static final String PRICE = "price";
+	public static final String AMOUNT = "amount";
 }

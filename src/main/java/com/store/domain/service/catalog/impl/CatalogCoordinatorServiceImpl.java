@@ -46,7 +46,7 @@ public class CatalogCoordinatorServiceImpl implements CatalogCoordinatorService 
 	}
 
 	@Override
-	public FullProductData getProductById(Long productId) {
+	public FullProductData getProductById(@NonNull Long productId) {
 		return ProductBuildCoordinatorProvider.toFullData(productService.getById(productId),
 				skuService.getSkusByProductId(productId));
 	}
@@ -64,7 +64,7 @@ public class CatalogCoordinatorServiceImpl implements CatalogCoordinatorService 
 	}
 
 	@Override
-	public SkuData getSkuById(Long skuId) {
+	public SkuData getSkuById(@NonNull Long skuId) {
 		return skuService.getById(skuId);
 	}
 

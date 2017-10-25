@@ -18,7 +18,7 @@ public class OrderPaymentItem implements Serializable {
 	@NonNull
 	private Long orderPaymentItemId;
 	@NonNull
-	private Long amount;
+	private Double amount;
 	@NonNull
 	private Timestamp date;
 	@NonNull

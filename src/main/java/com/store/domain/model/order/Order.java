@@ -29,20 +29,18 @@ public class Order implements Serializable {
 	@NonNull
 	private OrderDelivery delivery;
 	@NonNull
-	private OrderNote note;
-	@NonNull
 	private OrderPayment payment;
 	@NonNull
 	@Singular
 	private List<OrderDiscount> discounts;
 	@NonNull
-	private Long subtotal;
+	private Double subtotal;
 	@NonNull
-	private Long deliveryCost;
+	private Double deliveryCost;
 	@NonNull
-	private Long totalAmount;
+	private Double totalAmount;
 	@NonNull
-	private Long discountCost;
+	private Double totalDiscount;
 	@NonNull
 	private Long createdByUserId;
 	@NonNull

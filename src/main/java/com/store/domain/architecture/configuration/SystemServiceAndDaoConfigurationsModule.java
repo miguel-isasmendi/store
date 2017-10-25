@@ -18,6 +18,8 @@ import com.store.domain.dao.catalog.impl.DatastoreProductDao;
 import com.store.domain.dao.catalog.impl.DatastoreSkuDao;
 import com.store.domain.dao.client.ClientDao;
 import com.store.domain.dao.client.impl.DatastoreClientDao;
+import com.store.domain.dao.order.OrderDao;
+import com.store.domain.dao.order.impl.DatastoreOrderDao;
 import com.store.domain.dao.registration.UserPendingValidationCodeDao;
 import com.store.domain.dao.registration.impl.DatastoreUserPendingValidationCodeDao;
 import com.store.domain.dao.user.UserDao;
@@ -36,6 +38,8 @@ import com.store.domain.service.firebase.FirebaseService;
 import com.store.domain.service.firebase.impl.FirebaseServiceImpl;
 import com.store.domain.service.migration.MigrationService;
 import com.store.domain.service.migration.impl.MigrationServiceImpl;
+import com.store.domain.service.order.OrderService;
+import com.store.domain.service.order.impl.CachedOrderService;
 import com.store.domain.service.registration.UserRegistrationCoordinatorService;
 import com.store.domain.service.registration.UserRegistrationService;
 import com.store.domain.service.registration.impl.UserRegistrationCoordinatorServiceImpl;
@@ -54,6 +58,7 @@ public class SystemServiceAndDaoConfigurationsModule extends AbstractModule {
 		bind(SkuService.class).to(CachedSkuService.class).in(Scopes.SINGLETON);
 		bind(ClientService.class).to(CachedClientService.class).in(Scopes.SINGLETON);
 		bind(CatalogCoordinatorService.class).to(CatalogCoordinatorServiceImpl.class).in(Scopes.SINGLETON);
+		bind(OrderService.class).to(CachedOrderService.class).in(Scopes.SINGLETON);
 
 		bind(UserRegistrationService.class).to(UserRegistrationServiceImpl.class).in(Scopes.SINGLETON);
 		bind(UserRegistrationCoordinatorService.class).to(UserRegistrationCoordinatorServiceImpl.class)
@@ -75,6 +80,7 @@ public class SystemServiceAndDaoConfigurationsModule extends AbstractModule {
 		bind(ProductDao.class).to(DatastoreProductDao.class).in(Scopes.SINGLETON);
 		bind(SkuDao.class).to(DatastoreSkuDao.class).in(Scopes.SINGLETON);
 		bind(ClientDao.class).to(DatastoreClientDao.class).in(Scopes.SINGLETON);
+		bind(OrderDao.class).to(DatastoreOrderDao.class).in(Scopes.SINGLETON);
 
 		// Migration dao
 		// TODO should this be here?

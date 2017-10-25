@@ -12,7 +12,7 @@ import lombok.NonNull;
 @Builder
 public class OrderItem implements Serializable {
 	private static final long serialVersionUID = 1L;
-	
+
 	@NonNull
 	private Long orderItemId;
 	@NonNull
@@ -24,7 +24,7 @@ public class OrderItem implements Serializable {
 	@NonNull
 	private Long skuId;
 	@NonNull
-	private Long price;
+	private Double price;
 	@NonNull
 	private Long quantity;
 }

@@ -94,6 +94,7 @@
 								<argument>com.store.domain.api.regular.CatalogApi</argument>
 								<argument>com.store.domain.api.regular.UsersApi</argument>
 								<argument>com.store.domain.api.regular.ClientApi</argument>
+								<argument>com.store.domain.api.regular.CheckoutApi</argument>
 								<argument>com.store.domain.api.open.PublicRegistrationApi</argument>
 							</arguments>
 						</configuration>

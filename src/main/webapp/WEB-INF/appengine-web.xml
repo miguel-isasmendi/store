@@ -8,7 +8,7 @@
 	<env-variables>
 		<env-var name="ENDPOINTS_SERVICE_NAME"
 			value="negrolas-api.endpoints.${endpoints.project.id}.cloud.goog" />
-		<env-var name="ENDPOINTS_SERVICE_VERSION" value="2017-10-24r3" />
+		<env-var name="ENDPOINTS_SERVICE_VERSION" value="2017-10-25r0" />
 		<env-var name="DEFAULT_ENCODING" value="UTF-8" />
 	</env-variables>
 

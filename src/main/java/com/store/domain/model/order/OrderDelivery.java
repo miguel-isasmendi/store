@@ -18,15 +18,11 @@ public class OrderDelivery implements Serializable {
 	@NonNull
 	private Long orderDeliveryId;
 	@NonNull
-	private Long orderDeliveryMethodId;
-	@NonNull
-	private Long amount;
+	private Double amount;
 	@NonNull
 	private Timestamp dueDate;
 	@NonNull
 	private OrderDeliveryStatus status;
-	@NonNull
-	private String address;
 	@NonNull
 	private Long createdByUserId;
 	@NonNull

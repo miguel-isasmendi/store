@@ -25,9 +25,7 @@ public class OrderPayment implements Serializable {
 	@NonNull
 	private Long orderId;
 	@NonNull
-	private Long orderPaymentMethodId;
-	@NonNull
-	private Long totalAmount;
+	private Double totalAmount;
 	@NonNull
 	@Setter
 	private OrderPaymentStatus status;
@@ -35,9 +33,9 @@ public class OrderPayment implements Serializable {
 	@NonNull
 	private List<OrderPaymentItem> items;
 
-	public Long addAmount(Long amount) {
+	public Double addAmount(Double amount) {
 		if (this.totalAmount == null) {
-			this.totalAmount = 0l;
+			this.totalAmount = 0d;
 		}
 
 		this.totalAmount += amount;
