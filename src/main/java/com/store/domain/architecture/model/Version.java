@@ -4,9 +4,10 @@ import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
 
-import autovalue.shaded.org.apache.commons.lang.StringUtils;
+import com.google.api.client.util.Preconditions;
+
 import lombok.Getter;
 
 @Getter

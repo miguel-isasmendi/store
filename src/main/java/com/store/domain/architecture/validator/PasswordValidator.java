@@ -1,9 +1,9 @@
 package com.store.domain.architecture.validator;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.google.inject.ConfigurationException;
 import com.store.architecture.properties.NamedPropertiesReader;
-
-import autovalue.shaded.org.apache.commons.lang.StringUtils;
 
 public class PasswordValidator {
 	private static PasswordValidator validator;

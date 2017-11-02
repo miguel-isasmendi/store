@@ -7,7 +7,6 @@ import java.util.Properties;
 import com.google.api.control.ServiceManagementConfigFilter;
 import com.google.api.control.extensions.appengine.GoogleAppEngineControlFilter;
 import com.google.api.server.spi.guice.EndpointsModule;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Scopes;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
@@ -23,6 +22,8 @@ import com.store.domain.api.regular.UserRegistrationApi;
 import com.store.domain.api.regular.UsersApi;
 import com.store.domain.architecture.api.regular.FirebaseRegularUserAuthenticationProtectedApi;
 import com.store.domain.architecture.interceptor.FinishedRegistrationValidationInterceptor;
+
+import endpoints.repackaged.com.google.common.collect.ImmutableList;
 
 public class SystemResourcesLoaderModule extends EndpointsModule {
 	private static final String WHOLE_API_PATH = "/_ah/api/*";

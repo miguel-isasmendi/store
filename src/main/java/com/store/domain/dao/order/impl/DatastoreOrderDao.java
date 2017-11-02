@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -43,7 +44,6 @@ import com.store.domain.model.order.OrderStatus;
 import com.store.domain.model.order.data.OrderCreationData;
 import com.store.domain.model.order.data.OrderDeliveryStatusModificationData;
 import com.store.domain.model.order.data.OrderDiscountCreationData;
-import com.store.domain.model.order.data.OrderItemCreationData;
 import com.store.domain.model.order.data.OrderPaymentItemCreationData;
 import com.store.domain.model.order.data.OrderStatusModificationData;
 
@@ -103,13 +103,11 @@ public class DatastoreOrderDao implements OrderDao {
 			Double discountCost = 0d;
 			Double orderSubtotal = 0d;
 
-			for (OrderItemCreationData item : orderData.getItems()) {
-				orderSubtotal += item.getQuantity() * item.getPrice();
-			}
+			orderSubtotal = orderData.getItems().stream().map(item -> item.getQuantity() * item.getPrice()).reduce(0d,
+					Double::sum);
 
-			for (OrderDiscountCreationData discount : orderData.getDiscounts()) {
-				discountCost += discount.getAmount();
-			}
+			discountCost = orderData.getDiscounts().stream().map(OrderDiscountCreationData::getAmount).reduce(0d,
+					Double::sum);
 
 			Double totalAmount = (deliveryCost + orderSubtotal) - discountCost;
 
@@ -127,16 +125,14 @@ public class DatastoreOrderDao implements OrderDao {
 			Entity order = datastore.put(entity);
 
 			// Saving items
-			List<OrderItem> items = new ArrayList<OrderItem>();
-			for (OrderItemCreationData item : orderData.getItems()) {
-				entity = Entity.newBuilder()
-						.setKey(datastore.allocateId(datastore.newKeyFactory().setKind(ITEM_KIND).newKey()))
-						.set(ORDER_ID, order.getKey().getId()).set(DaoConstants.QUANTITY, item.getQuantity())
-						.set(DaoConstants.PRICE, item.getPrice()).set(ITEM_SKU_ID, item.getSkuId())
-						.set(DaoConstants.CREATED_BY_USER_ID, userId).set(DaoConstants.CREATED_ON, Timestamp.now())
-						.build();
-				items.add(hidrateItemFromEntity(datastore.put(entity)));
-			}
+			List<OrderItem> items = orderData.getItems().stream()
+					.map(item -> Entity.newBuilder()
+							.setKey(datastore.allocateId(datastore.newKeyFactory().setKind(ITEM_KIND).newKey()))
+							.set(ORDER_ID, order.getKey().getId()).set(DaoConstants.QUANTITY, item.getQuantity())
+							.set(DaoConstants.PRICE, item.getPrice()).set(ITEM_SKU_ID, item.getSkuId())
+							.set(DaoConstants.CREATED_BY_USER_ID, userId).set(DaoConstants.CREATED_ON, Timestamp.now())
+							.build())
+					.map(datastore::put).map(this::hidrateItemFromEntity).collect(Collectors.toList());
 
 			entity = Entity.newBuilder()
 					.setKey(datastore.allocateId(datastore.newKeyFactory().setKind(DELIVERY_KIND).newKey()))
@@ -180,15 +176,11 @@ public class DatastoreOrderDao implements OrderDao {
 			Entity orderPayment = datastore.put(paymentEntity);
 
 			// Saving discounts
-			List<Entity> discounts = new ArrayList<Entity>();
-			for (OrderDiscountCreationData discount : orderData.getDiscounts()) {
-				entity = Entity.newBuilder()
-						.setKey(datastore.allocateId(datastore.newKeyFactory().setKind(ORDER_DISCOUNT_KIND).newKey()))
-						.set(ORDER_ID, order.getKey().getId()).set(DaoConstants.AMOUNT, discount.getAmount())
-						.set(DaoConstants.CREATED_BY_USER_ID, userId).set(DaoConstants.CREATED_ON, Timestamp.now())
-						.build();
-				discounts.add(datastore.put(entity));
-			}
+			List<Entity> discounts = orderData.getDiscounts().stream().map(discount -> Entity.newBuilder()
+					.setKey(datastore.allocateId(datastore.newKeyFactory().setKind(ORDER_DISCOUNT_KIND).newKey()))
+					.set(ORDER_ID, order.getKey().getId()).set(DaoConstants.AMOUNT, discount.getAmount())
+					.set(DaoConstants.CREATED_BY_USER_ID, userId).set(DaoConstants.CREATED_ON, Timestamp.now()).build())
+					.map(datastore::put).collect(Collectors.toList());
 
 			// Saving calculated fields for order
 
@@ -427,11 +419,12 @@ public class DatastoreOrderDao implements OrderDao {
 		if (entities == null) {
 			return Collections.emptyList();
 		}
-		List<OrderItem> result = new ArrayList<>();
+		List<OrderItem> result = new ArrayList<OrderItem>();
+		
 		while (entities.hasNext()) {
-			Entity entity = entities.next();
-			result.add(hidrateItemFromEntity(entity));
+			result.add(hidrateItemFromEntity(entities.next()));
 		}
+		
 		return result;
 	}
 

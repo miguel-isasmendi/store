@@ -19,7 +19,6 @@ import com.google.appengine.api.urlfetch.HTTPMethod;
 import com.google.appengine.api.urlfetch.HTTPRequest;
 import com.google.appengine.api.urlfetch.HTTPResponse;
 import com.google.appengine.api.urlfetch.URLFetchService;
-import com.google.common.net.MediaType;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.store.architecture.exception.service.InternalServiceErrorException;
@@ -34,6 +33,7 @@ import com.store.domain.service.firebase.FirebaseService;
 import com.store.external.service.firebase.model.InternalFirebaseGetUserInformationResponseData;
 import com.store.external.service.firebase.model.InternalFirebaseUser;
 
+import endpoints.repackaged.com.google.common.net.MediaType;
 import lombok.Getter;
 import lombok.NonNull;
 

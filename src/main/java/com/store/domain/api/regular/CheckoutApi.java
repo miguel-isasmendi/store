@@ -7,7 +7,6 @@ import org.apache.commons.collections.CollectionUtils;
 
 import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
-import com.google.api.server.spi.config.AnnotationBoolean;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.Named;
 import com.google.api.server.spi.response.BadRequestException;

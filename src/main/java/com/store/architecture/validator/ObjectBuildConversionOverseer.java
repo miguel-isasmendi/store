@@ -3,11 +3,11 @@ package com.store.architecture.validator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.google.api.client.util.Preconditions;
 import com.store.architecture.exception.validation.RequestBusinessValidationException;
 import com.store.architecture.exception.validation.UnexpectedBuildException;
 import com.store.architecture.exception.validation.UnexpectedValidationException;
 
-import autovalue.shaded.com.google.common.common.base.Preconditions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -16,7 +16,7 @@ import lombok.experimental.Accessors;
 
 @Builder
 @Getter
-@Accessors(chain=true)
+@Accessors(chain = true)
 public class ObjectBuildConversionOverseer<T, S> {
 
 	@SuppressWarnings("rawtypes")
