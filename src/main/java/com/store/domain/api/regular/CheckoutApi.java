@@ -1,5 +1,9 @@
 package com.store.domain.api.regular;
 
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.DELETE;
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.GET;
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.POST;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,152 +29,118 @@ import com.store.architecture.model.ResponseListContainer.ResponseListContainerB
 import com.store.architecture.validator.ObjectBuildConversionOverseer;
 import com.store.domain.architecture.api.regular.FirebaseRegularUserAuthenticationProtectedApi;
 import com.store.domain.exception.ErrorConstants;
-import com.store.domain.model.client.data.ClientData;
 import com.store.domain.model.order.build.coordinator.OrderBuildCoordinator;
 import com.store.domain.model.order.build.coordinator.OrderPaymentItemBuildCoordinator;
 import com.store.domain.model.order.build.validator.OrderCreationValidatorProvider;
-import com.store.domain.model.order.data.OrderContactCreationData;
-import com.store.domain.model.order.data.OrderCreationData;
+import com.store.domain.model.order.data.OrderCreationCoordinatorData;
 import com.store.domain.model.order.data.OrderData;
 import com.store.domain.model.order.data.OrderDeliveryStatusModificationData;
 import com.store.domain.model.order.data.OrderStatusModificationData;
-import com.store.domain.model.order.dto.OrderContactCreationDto;
 import com.store.domain.model.order.dto.OrderCreationDto;
 import com.store.domain.model.order.dto.OrderDeliveryStatusModificationDto;
 import com.store.domain.model.order.dto.OrderDto;
 import com.store.domain.model.order.dto.OrderPaymentCreationListDto;
-import com.store.domain.model.order.dto.OrderStatusModificationDto;
-import com.store.domain.service.catalog.CatalogCoordinatorService;
-import com.store.domain.service.client.ClientService;
-import com.store.domain.service.order.OrderService;
+import com.store.domain.model.user.data.UserData;
+import com.store.domain.service.checkout.CheckoutCoordinatorService;
 import com.store.domain.service.user.UserService;
+
+import lombok.NonNull;
 
 @ExceptionMapping(from = RequestBusinessValidationException.class, to = BadRequestException.class)
 @ExceptionMapping(from = NotFoundDaoException.class, to = BadRequestException.class)
 @ExceptionMapping(from = ConflictDaoException.class, to = ConflictException.class)
 public class CheckoutApi extends FirebaseRegularUserAuthenticationProtectedApi {
-	private OrderService orderService;
+	private CheckoutCoordinatorService checkoutCoordinatorService;
 	private UserService userService;
-	private ClientService clientService;
-	private CatalogCoordinatorService catalogService;
 
 	@Inject
-	public CheckoutApi(OrderService orderService, UserService userService, ClientService clientService,
-			CatalogCoordinatorService catalogService) {
-		this.orderService = orderService;
+	public CheckoutApi(@NonNull CheckoutCoordinatorService checkoutCoordinatorService,
+			@NonNull UserService userService) {
+		this.checkoutCoordinatorService = checkoutCoordinatorService;
 		this.userService = userService;
-		this.clientService = clientService;
-		this.catalogService = catalogService;
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/orders")
+	@ApiMethod(httpMethod = POST, path = "/store/orders")
 	@ExceptionMapping(from = InvalidArgumentsDaoException.class, to = BadRequestException.class)
-	public OrderDto createOrder(User firebaseUser, OrderCreationDto orderRegistrationDto) throws ServiceException {
-
-		Long userId = userService.getByFirebaseId(firebaseUser.getId()).getUserId();
-
-		OrderCreationData orderData = ObjectBuildConversionOverseer.<OrderCreationDto, OrderCreationData>builder()
-				.inputObject(orderRegistrationDto)
+	@ExceptionMapping(from = InvalidArgumentsServiceException.class, to = BadRequestException.class)
+	public OrderDto createOrder(User firebaseUser, OrderCreationDto orderCreationDto) throws ServiceException {
+		OrderCreationCoordinatorData orderCreationData = ObjectBuildConversionOverseer
+				.<OrderCreationDto, OrderCreationCoordinatorData>builder().inputObject(orderCreationDto)
 				.preBuildValidator(OrderCreationValidatorProvider::validateDtoToDataTranslation)
-				.buildClosure(overseer -> OrderBuildCoordinator.toData(overseer.getInputObject(), catalogService))
-				.postBuildValidator(overseer -> {
-					Double deliveryCost = overseer.getBuiltObject().getDelivery().getAmount();
-					Double discountCost = 0d;
-					Double orderSubtotal = 0d;
+				.buildClosure(overseer -> OrderBuildCoordinator.toData(overseer.getInputObject())).build().execute();
 
-					orderSubtotal += overseer.getBuiltObject().getItems().stream()
-							.map(item -> item.getQuantity() * item.getPrice()).reduce(0d, Double::sum);
+		OrderData order = checkoutCoordinatorService.createOrder(userService.getByFirebaseId(firebaseUser.getId()),
+				orderCreationData);
 
-					discountCost += overseer.getBuiltObject().getDiscounts().stream()
-							.map(discount -> discount.getAmount()).reduce(0d, Double::sum);
-
-					Double totalAmount = (deliveryCost + orderSubtotal) - discountCost;
-
-					if (discountCost > 0 && totalAmount < 1) {
-						throw new RequestBusinessValidationException(
-								ErrorConstants.AMOUNT_OF_DISCOUNTS_EXCEEDS_ORDER_TOTAL);
-					}
-
-				}).build().execute();
-
-		dealWithClientData(orderRegistrationDto.getContact(), orderData.getContact());
-
-		OrderData orderCreated = orderService.create(userId, orderData);
-
-		return OrderBuildCoordinator.toDto(orderCreated, catalogService);
-
+		return OrderBuildCoordinator.toDto(order);
 	}
 
-	private void dealWithClientData(OrderContactCreationDto contactDto, OrderContactCreationData contactData) {
-		ClientData client = clientService.getById(contactDto.getClientId());
+	@ApiMethod(httpMethod = GET, path = "/store/orders/{order_id}")
+	public OrderDto getOrder(User firebaseUser, @Named("order_id") Long orderId) throws ServiceException {
+		OrderData order = checkoutCoordinatorService.getOrder(userService.getByFirebaseId(firebaseUser.getId()),
+				orderId);
 
-		// I update the request data with the newly created client or with the data
-		// received from the external service.
-		contactData.setClientId(client.getClientId());
-		contactData.setFirstName(client.getFirstName());
-		contactData.setLastName(client.getLastName());
-		contactData.setEmail(client.getEmail());
+		return OrderBuildCoordinator.toDto(order);
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.GET, path = "/store/orders/{order_id}")
-	public OrderDto getOrder(User user, @Named("order_id") Long orderId) throws ServiceException {
-		return OrderBuildCoordinator.toDto(orderService.get(orderId), catalogService);
+	@ApiMethod(httpMethod = GET, path = "/store/orders")
+	public ResponseListContainer<OrderDto> getOrders(User firebaseUser) throws ServiceException {
+
+		ResponseListContainerBuilder<OrderDto> response = ResponseListContainer.<OrderDto>builder();
+
+		List<OrderData> orders = checkoutCoordinatorService
+				.getOrders(userService.getByFirebaseId(firebaseUser.getId()));
+
+		for (OrderData order : orders) {
+			response.item(OrderBuildCoordinator.toDto(order));
+		}
+
+		return response.build();
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.GET, path = "/store/orders")
-	public ResponseListContainer<OrderDto> getOrders(User user) throws ServiceException {
-
-		ResponseListContainerBuilder<OrderDto> responseContainerBuilder = ResponseListContainer.<OrderDto>builder();
-		responseContainerBuilder.items(orderService.getOrders().stream()
-				.map(order -> OrderBuildCoordinator.toDto(order, catalogService)).collect(Collectors.toList()));
-
-		return responseContainerBuilder.build();
-	}
-
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/orders/{order_id}/status")
+	@ApiMethod(httpMethod = POST, path = "/store/orders/{order_id}/status")
 	@ExceptionMapping(from = InvalidArgumentsDaoException.class, to = BadRequestException.class)
 	@ExceptionMapping(from = NotFoundDaoException.class, to = NotFoundException.class)
 	public OrderDto changeOrderStatus(User user, @Named("order_id") Long orderId,
-			OrderStatusModificationDto orderStatusModificationDto) throws ServiceException {
-		OrderStatusModificationData orderStatusData = OrderBuildCoordinator.toData(orderStatusModificationDto);
+			OrderStatusModificationData orderStatusModificationData) throws ServiceException {
+		OrderData order = checkoutCoordinatorService.changeOrderStatus(userService.getByFirebaseId(user.getId()),
+				orderId, orderStatusModificationData);
 
-		return OrderBuildCoordinator.toDto(orderService.updateOrderStatus(
-				userService.getByFirebaseId(user.getId()).getUserId(), orderId, orderStatusData), catalogService);
+		return OrderBuildCoordinator.toDto(order);
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/orders/{order_id}/payment")
-
+	@ApiMethod(httpMethod = POST, path = "/store/orders/{order_id}/payment")
 	@ExceptionMapping(from = InvalidArgumentsDaoException.class, to = NotFoundException.class)
 	@ExceptionMapping(from = NotFoundDaoException.class, to = NotFoundException.class)
 	@ExceptionMapping(from = InvalidArgumentsServiceException.class, to = BadRequestException.class)
-	public OrderDto createOrderPaymentItem(User user, @Named("order_id") Long orderId,
+	public OrderDto createOrderPaymentItems(User firebaseUser, @Named("order_id") Long orderId,
 			OrderPaymentCreationListDto orderPaymentRegistrationListDto) throws ServiceException {
 
-		Long userId = userService.getByFirebaseId(user.getId()).getUserId();
+		UserData user = userService.getByFirebaseId(firebaseUser.getId());
 
-		OrderData order = orderService
-				.createOrderPaymentItems(orderPaymentRegistrationListDto
+		OrderData order = checkoutCoordinatorService.createOrderPaymentItems(user, orderId,
+				orderPaymentRegistrationListDto
 						.getItems().stream().map(paymentItemDto -> OrderPaymentItemBuildCoordinator
-								.toData(paymentItemDto, orderId, userId, paymentItemDto.getDate()))
+								.toData(paymentItemDto, orderId, user.getUserId(), paymentItemDto.getDate()))
 						.collect(Collectors.toList()));
 
-		return OrderBuildCoordinator.toDto(order, catalogService);
+		return OrderBuildCoordinator.toDto(order);
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/orders/{order_id}/delivery")
-
+	@ApiMethod(httpMethod = POST, path = "/store/orders/{order_id}/delivery")
 	@ExceptionMapping(from = InvalidArgumentsDaoException.class, to = BadRequestException.class)
 	@ExceptionMapping(from = NotFoundDaoException.class, to = NotFoundException.class)
 	public OrderDto updateOrderDeliveryStatus(User user, @Named("order_id") Long orderId,
 			OrderDeliveryStatusModificationDto statusModificationDto) throws ServiceException {
-		OrderData orderData = this.orderService.updateOrderDeliveryStatus(
-				userService.getByFirebaseId(user.getId()).getUserId(), orderId,
+		OrderData order = checkoutCoordinatorService.updateOrderDeliveryStatus(
+				userService.getByFirebaseId(user.getId()), orderId,
 				OrderDeliveryStatusModificationData.builder().status(statusModificationDto.getStatus()).build());
 
-		return OrderBuildCoordinator.toDto(orderData, catalogService);
+		return OrderBuildCoordinator.toDto(order);
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.DELETE, path = "/store/orders/{order_id}/payment")
+	@ApiMethod(httpMethod = DELETE, path = "/store/orders/{order_id}/payment")
+	@ExceptionMapping(from = InvalidArgumentsServiceException.class, to = BadRequestException.class)
 	public OrderDto invalidatePaymentItem(User user, @Named("order_id") Long orderId,
 			RequestListContainer<Object> paymentItemIdsContainer) throws ServiceException {
 
@@ -187,8 +157,9 @@ public class CheckoutApi extends FirebaseRegularUserAuthenticationProtectedApi {
 					ErrorConstants.formatError(ErrorConstants.SHOULD_NOT_HAVE_REPEATED_ELEMENTS, "payments"));
 		}
 
-		OrderData newOrderData = orderService.invalidatePaymentItem(orderId, paymentItemIds);
+		OrderData order = checkoutCoordinatorService.invalidatePaymentItem(userService.getByFirebaseId(user.getId()),
+				orderId, paymentItemIds);
 
-		return OrderBuildCoordinator.toDto(newOrderData, catalogService);
+		return OrderBuildCoordinator.toDto(order);
 	}
 }

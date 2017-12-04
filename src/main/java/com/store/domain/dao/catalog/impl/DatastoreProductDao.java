@@ -1,8 +1,6 @@
 package com.store.domain.dao.catalog.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -33,7 +31,7 @@ public class DatastoreProductDao implements ProductDao {
 
 	private Datastore datastore;
 
-	protected static String PRODUCT_KIND = "Product";
+	protected static String KIND = "Product";
 
 	@Inject
 	public DatastoreProductDao(Datastore datastore) {
@@ -51,7 +49,7 @@ public class DatastoreProductDao implements ProductDao {
 
 			for (ProductCreationData prodData : prodDataArray) {
 				FullEntity<IncompleteKey> entity = Entity.newBuilder()
-						.setKey(datastore.allocateId(datastore.newKeyFactory().setKind(PRODUCT_KIND).newKey()))
+						.setKey(datastore.allocateId(datastore.newKeyFactory().setKind(KIND).newKey()))
 						.set(DaoConstants.NAME, prodData.getName())
 						.set(DaoConstants.DESCRIPTION, prodData.getDescription())
 						.set(DaoConstants.CREATED_BY_USER_ID, userId).set(DaoConstants.CREATED_ON, Timestamp.now())
@@ -82,8 +80,8 @@ public class DatastoreProductDao implements ProductDao {
 
 	@Override
 	public Product getById(@NonNull Long productId) {
-		Key key = datastore.newKeyFactory().setKind(PRODUCT_KIND).newKey(productId);
-		QueryResults<Entity> entityResults = datastore.run(Query.newEntityQueryBuilder().setKind(PRODUCT_KIND)
+		Key key = datastore.newKeyFactory().setKind(KIND).newKey(productId);
+		QueryResults<Entity> entityResults = datastore.run(Query.newEntityQueryBuilder().setKind(KIND)
 				.setFilter(CompositeFilter.and(PropertyFilter.eq(DaoConstants.KEY_FIELD, key))).build());
 
 		if (!entityResults.hasNext()) {
@@ -91,25 +89,15 @@ public class DatastoreProductDao implements ProductDao {
 					"Product", "productId = \"" + productId + "\""));
 		}
 
-		return makeList(entityResults).get(0);
+		return hidrateProductFromEntity(entityResults.next());
 	}
 
 	@Override
-	public List<Product> getProducts() {
-		Query<Entity> query = Query.newEntityQueryBuilder().setKind(PRODUCT_KIND).build();
-
-		QueryResults<Entity> entities = datastore.run(query);
-
-		return makeList(entities);
-	}
-
-	private List<Product> makeList(Iterator<Entity> entities) {
-		if (entities == null) {
-			return Collections.emptyList();
-		}
-
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(entities, 0), false)
-				.map(this::hidrateProductFromEntity).collect(Collectors.toList());
+	public List<Long> getProductsIds() {
+		return StreamSupport
+				.stream(Spliterators.spliteratorUnknownSize(
+						datastore.run(Query.newKeyQueryBuilder().setKind(KIND).build()), 0), false)
+				.map(Key::getId).collect(Collectors.toList());
 	}
 
 }

@@ -1,5 +1,7 @@
 package com.store.domain.api.open;
 
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.POST;
+
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
@@ -33,7 +35,7 @@ public class PublicRegistrationApi {
 		this.registrationService = userRegistrationService;
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/users/registrations")
+	@ApiMethod(httpMethod = POST, path = "/store/users/registrations")
 	public void register(@NonNull UserCreationDto userRegistrationDto) throws Exception {
 
 		UserRegistrationData userRegistrationData = ObjectBuildConversionOverseer

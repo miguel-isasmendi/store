@@ -30,8 +30,8 @@ public class CachedProductService implements ProductService {
 		this.productCacheHandler = CacheHandler.<Product>builder().cache(cache)
 				.keyGeneratorClosure(Product::getProductId).prefix(CACHE_PRODUCT_PREFIX).build();
 
-		this.productIdsCacheHandler = CacheHandler.<List<Long>>builder().cache(cache)
-				.prefix(CACHE_PRODUCT_IDS_PREFIX).build();
+		this.productIdsCacheHandler = CacheHandler.<List<Long>>builder().cache(cache).prefix(CACHE_PRODUCT_IDS_PREFIX)
+				.build();
 	}
 
 	@Override
@@ -54,24 +54,15 @@ public class CachedProductService implements ProductService {
 
 	@Override
 	public List<ProductData> getProducts() {
-		List<Long> productIds = productIdsCacheHandler.getFromCache();
-		List<ProductData> productDatas = null;
+		List<Long> productsIds = productIdsCacheHandler.getFromCache();
 
-		if (productIds == null) {
-			List<Product> products = productDao.getProducts();
+		if (productsIds == null) {
+			productsIds = productDao.getProductsIds();
 
-			productDatas = products.stream().map(productCacheHandler::putIntoCache).map(ProductBuildCoordinatorProvider::toData)
-					.collect(Collectors.toList());
-
-			productIds = productDatas.stream().map(ProductData::getProductId).collect(Collectors.toList());
-
-			productIdsCacheHandler.putIntoCacheUsingPartialKey(productIds);
-		} else {
-			productDatas = productIds.stream().map(productDao::getById).map(ProductBuildCoordinatorProvider::toData)
-					.collect(Collectors.toList());
+			productIdsCacheHandler.putIntoCacheUsingPartialKey(productsIds);
 		}
 
-		return productDatas;
+		return productsIds.stream().map(this::getById).collect(Collectors.toList());
 	}
 
 }

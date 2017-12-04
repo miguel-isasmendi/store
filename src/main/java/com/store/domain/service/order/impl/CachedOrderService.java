@@ -57,7 +57,7 @@ public class CachedOrderService implements OrderService {
 
 	@Override
 	public List<OrderData> getOrders() {
-		return orderDao.getOrders().stream().map(OrderBuildCoordinator::toData).collect(Collectors.toList());
+		return orderDao.getOrdersIds().stream().map(this::get).collect(Collectors.toList());
 	}
 
 	@Override

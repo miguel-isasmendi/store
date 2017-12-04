@@ -25,6 +25,6 @@ public interface OrderDao {
 
 	public Order invalidatePaymentItem(@NonNull Long orderId, @NonNull List<Long> orderPaymentIdsToInvalidate);
 
-	public List<Order> getOrders();
+	public List<Long> getOrdersIds();
 
 }

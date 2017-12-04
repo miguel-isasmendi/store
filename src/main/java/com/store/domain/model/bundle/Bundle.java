@@ -18,10 +18,7 @@ public class Bundle implements Serializable {
 	@NonNull
 	private Long bundleId;
 	@NonNull
-	private Long skuId;
-	@NonNull
 	private Timestamp activeFrom;
-	@NonNull
 	private Timestamp activeUntil;
 	@Singular
 	private List<BundleItem> items;

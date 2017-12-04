@@ -5,7 +5,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Spliterators;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -388,16 +390,11 @@ public class DatastoreOrderDao implements OrderDao {
 	}
 
 	@Override
-	public List<Order> getOrders() {
-
-		QueryResults<Entity> queryResults = datastore.run(Query.newEntityQueryBuilder().setKind(ORDER_KIND).build());
-		List<Order> results = new ArrayList<Order>();
-
-		while (queryResults.hasNext()) {
-			results.add(hidrateOrderFromEntity(queryResults.next()));
-		}
-
-		return results;
+	public List<Long> getOrdersIds() {
+		return StreamSupport
+				.stream(Spliterators.spliteratorUnknownSize(
+						datastore.run(Query.newKeyQueryBuilder().setKind(ORDER_KIND).build()), 0), false)
+				.map(Key::getId).collect(Collectors.toList());
 	}
 
 	protected Order getByIdOnly(@NonNull Long orderId) {
@@ -420,11 +417,11 @@ public class DatastoreOrderDao implements OrderDao {
 			return Collections.emptyList();
 		}
 		List<OrderItem> result = new ArrayList<OrderItem>();
-		
+
 		while (entities.hasNext()) {
 			result.add(hidrateItemFromEntity(entities.next()));
 		}
-		
+
 		return result;
 	}
 

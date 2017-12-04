@@ -21,4 +21,6 @@ public class DaoConstants {
 	public static final String DATE = "date";
 	public static final String PRICE = "price";
 	public static final String AMOUNT = "amount";
+	public static final String ACTIVE_UNTIL = "activeUntil";
+	public static final String ACTIVE_FROM = "activeFrom";
 }

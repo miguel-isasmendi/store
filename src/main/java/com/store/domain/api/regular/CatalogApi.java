@@ -1,5 +1,8 @@
 package com.store.domain.api.regular;
 
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.GET;
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.POST;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,9 @@ import com.store.architecture.model.ResponseListContainer;
 import com.store.architecture.model.ResponseListContainer.ResponseListContainerBuilder;
 import com.store.architecture.validator.ObjectBuildConversionOverseer;
 import com.store.domain.architecture.api.regular.FirebaseRegularUserAuthenticationProtectedApi;
+import com.store.domain.model.bundle.build.coordinator.BundleBuildCoordinator;
+import com.store.domain.model.bundle.dto.BundleCreationDto;
+import com.store.domain.model.bundle.dto.BundleDto;
 import com.store.domain.model.product.build.coordinator.ProductBuildCoordinatorProvider;
 import com.store.domain.model.product.build.validator.ProductCreationValidatorProvider;
 import com.store.domain.model.product.data.FullProductData;
@@ -56,7 +62,7 @@ public class CatalogApi extends FirebaseRegularUserAuthenticationProtectedApi {
 		this.userService = userService;
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/products")
+	@ApiMethod(httpMethod = POST, path = "/store/products")
 	public ResponseListContainer<FullProductDto> createProduct(@NonNull User user,
 			@NonNull ProductCreationListDto productRegistrationDtoList) throws ServiceException {
 
@@ -73,7 +79,7 @@ public class CatalogApi extends FirebaseRegularUserAuthenticationProtectedApi {
 				.collect(Collectors.toList());
 
 		List<FullProductData> createdProducts = catalogCoordinatorService.createProduct(storeUser.getUserId(),
-				productsRegistrationDatas.toArray(new ProductCreationData[productsRegistrationDatas.size()]));
+				productsRegistrationDatas);
 
 		ResponseListContainerBuilder<FullProductDto> responseContainerBuilder = ResponseListContainer
 				.<FullProductDto>builder();
@@ -84,7 +90,7 @@ public class CatalogApi extends FirebaseRegularUserAuthenticationProtectedApi {
 		return responseContainerBuilder.build();
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.GET, path = "/store/products/{product_id}")
+	@ApiMethod(httpMethod = GET, path = "/store/products/{product_id}")
 	public FullProductDto getProduct(User user, @Named("product_id") Long productId) throws ServiceException {
 
 		return ProductBuildCoordinatorProvider.toFullDto(catalogCoordinatorService.getProductById(productId));
@@ -101,13 +107,13 @@ public class CatalogApi extends FirebaseRegularUserAuthenticationProtectedApi {
 			productsResponse.items(catalogCoordinatorService.getFullProducts().stream()
 					.map(ProductBuildCoordinatorProvider::toFullDto).collect(Collectors.toList()));
 		} else {
-			productsResponse.items(catalogCoordinatorService.getProducts());
+			productsResponse.items(catalogCoordinatorService.getProductService().getProducts());
 		}
 
 		return productsResponse.build();
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/products/{product_id}/skus")
+	@ApiMethod(httpMethod = POST, path = "/store/products/{product_id}/skus")
 	@ExceptionMapping(from = InvalidArgumentsDaoException.class, to = NotFoundException.class)
 	public SkuDto createSku(@NonNull User user, @NonNull @Named("product_id") Long productId,
 			@NonNull SkuCreationDto skuCreationDto) throws ServiceException {
@@ -122,6 +128,23 @@ public class CatalogApi extends FirebaseRegularUserAuthenticationProtectedApi {
 				.execute();
 
 		return SkuBuildCoordinatorProvider
-				.toDto(catalogCoordinatorService.createSku(storeUser.getUserId(), skuCreationData));
+				.toDto(catalogCoordinatorService.getSkuService().create(storeUser.getUserId(), skuCreationData));
+	}
+
+	@ApiMethod(httpMethod = POST, path = "/store/bundles")
+	@ExceptionMapping(from = InvalidArgumentsDaoException.class, to = NotFoundException.class)
+	public BundleDto createBundle(@NonNull User user, @NonNull BundleCreationDto bundleCreationDto)
+			throws ServiceException {
+		UserData storeUser = this.userService.getByFirebaseId(user.getId());
+
+		return BundleBuildCoordinator.toDto(catalogCoordinatorService.createBundle(storeUser.getUserId(),
+				BundleBuildCoordinator.toData(bundleCreationDto)));
+	}
+
+	@ApiMethod(httpMethod = GET, path = "/store/bundles/{bundle_id}")
+	public BundleDto getBundle(@NonNull User user, @NonNull @Named("bundle_id") Long bundleId) throws ServiceException {
+		UserData storeUser = this.userService.getByFirebaseId(user.getId());
+
+		return BundleBuildCoordinator.toDto(catalogCoordinatorService.getBundleById(storeUser.getUserId(), bundleId));
 	}
 }

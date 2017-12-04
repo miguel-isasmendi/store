@@ -1,5 +1,6 @@
 package com.store.domain.model.bundle.build.coordinator;
 
+import com.google.cloud.Timestamp;
 import com.store.architecture.utils.DateUtils;
 import com.store.domain.model.bundle.Bundle;
 import com.store.domain.model.bundle.BundleItem;
@@ -21,9 +22,12 @@ public class BundleBuildCoordinator {
 
 	public static BundleData toData(@NonNull Bundle bundle) {
 		BundleDataBuilder builder = BundleData.builder().activeFrom(DateUtils.dateFrom(bundle.getActiveFrom()))
-				.activeUntil(DateUtils.dateFrom(bundle.getActiveUntil())).bundleId(bundle.getBundleId())
-				.createdByUserId(bundle.getCreatedByUserId()).createdOn(DateUtils.dateFrom(bundle.getCreatedOn()))
-				.skuId(bundle.getSkuId());
+				.bundleId(bundle.getBundleId()).createdByUserId(bundle.getCreatedByUserId())
+				.createdOn(DateUtils.dateFrom(bundle.getCreatedOn()));
+
+		if (bundle.getActiveUntil() != null) {
+			builder.activeUntil(DateUtils.dateFrom(bundle.getActiveUntil()));
+		}
 
 		for (BundleItem bundleItem : bundle.getItems()) {
 			builder.item(toData(bundleItem));
@@ -41,7 +45,7 @@ public class BundleBuildCoordinator {
 	public static BundleDto toDto(@NonNull BundleData bundle) {
 		BundleDtoBuilder builder = BundleDto.builder().activeFrom(bundle.getActiveFrom())
 				.activeUntil(bundle.getActiveUntil()).bundleId(bundle.getBundleId())
-				.createdByUserId(bundle.getCreatedByUserId()).createdOn(bundle.getCreatedOn()).skuId(bundle.getSkuId());
+				.createdByUserId(bundle.getCreatedByUserId()).createdOn(bundle.getCreatedOn());
 
 		for (BundleItemData bundleItem : bundle.getItems()) {
 			builder.item(toDto(bundleItem));
@@ -57,8 +61,12 @@ public class BundleBuildCoordinator {
 	}
 
 	public static BundleCreationData toData(@NonNull BundleCreationDto bundle) {
-		BundleCreationDataBuilder builder = BundleCreationData.builder().activeFrom(bundle.getActiveFrom())
-				.activeUntil(bundle.getActiveUntil()).skuId(bundle.getSkuId());
+		BundleCreationDataBuilder builder = BundleCreationData.builder().activeUntil(bundle.getActiveUntil())
+				.name(bundle.getName()).price(bundle.getPrice()).description(bundle.getDescription())
+				.skuId(bundle.getSkuId()).productId(bundle.getProductId()).billingType(bundle.getBillingType());
+
+		builder.activeFrom(
+				bundle.getActiveFrom() == null ? DateUtils.dateFrom(Timestamp.now()) : bundle.getActiveFrom());
 
 		for (BundleCreationItemDto bundleItem : bundle.getItems()) {
 			builder.item(toData(bundleItem));

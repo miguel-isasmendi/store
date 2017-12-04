@@ -1,5 +1,9 @@
 package com.store.domain.api.regular;
 
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.GET;
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.POST;
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.PUT;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,20 +45,20 @@ public class ClientApi extends FirebaseRegularUserAuthenticationProtectedApi {
 		this.userService = userService;
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.GET, path = "/store/clients/{client_id}")
+	@ApiMethod(httpMethod = GET, path = "/store/clients/{client_id}")
 	public ClientDto getClient(@NonNull User user, @NonNull @Named("client_id") Long clientId) {
 
 		return ClientBuildCoordinator.toDto(clientService.getById(clientId));
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.GET, path = "/store/clients")
+	@ApiMethod(httpMethod = GET, path = "/store/clients")
 	public List<ClientDto> getClientsList(@NonNull User user) {
 
 		return clientService.getClientList(userService.getByFirebaseId(user.getId()).getUserId()).stream()
 				.map(ClientBuildCoordinator::toDto).collect(Collectors.toList());
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/clients")
+	@ApiMethod(httpMethod = POST, path = "/store/clients")
 	public ClientDto createClient(@NonNull User user, @NonNull ClientCreationDto clientCreationDto) {
 
 		ObjectBuildConversionOverseer<ClientCreationDto, ClientCreationData> translationOverseer = ObjectBuildConversionOverseer
@@ -66,7 +70,7 @@ public class ClientApi extends FirebaseRegularUserAuthenticationProtectedApi {
 				translationOverseer.execute()));
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.PUT, path = "/store/clients/{client_id}")
+	@ApiMethod(httpMethod = PUT, path = "/store/clients/{client_id}")
 	public ClientDto updateClient(@NonNull User user, @NonNull @Named("client_id") Long clientId,
 			@NonNull ClientModificationDto clientModificationDto) {
 		userService.getByFirebaseId(user.getId());

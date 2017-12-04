@@ -1,7 +1,7 @@
 package com.store.domain.service.client.impl;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.inject.Inject;
@@ -54,16 +54,9 @@ public class CachedClientService implements ClientService {
 
 	@Override
 	public List<ClientData> getClientList(@NonNull Long userId) {
-		List<Client> clients = clientDao.getList();
-		List<ClientData> clientsData = new ArrayList<ClientData>(clients.size());
+		List<Long> clientsIds = clientDao.getClientsIds();
 
-		for (Client client : clients) {
-			putClientIntoCache(client);
-
-			clientsData.add(ClientBuildCoordinator.toData(client));
-		}
-
-		return clientsData;
+		return clientsIds.stream().map(this::getById).collect(Collectors.toList());
 	}
 
 	@Override

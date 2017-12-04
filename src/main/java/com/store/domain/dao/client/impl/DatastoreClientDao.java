@@ -1,9 +1,10 @@
 package com.store.domain.dao.client.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -92,19 +93,11 @@ public class DatastoreClientDao implements ClientDao {
 	}
 
 	@Override
-	public List<Client> getList() {
-		return makeList(datastore.run(Query.newEntityQueryBuilder().setKind(KIND).build()));
-	}
-
-	private List<Client> makeList(QueryResults<Entity> entities) {
-		if (entities == null) {
-			return Collections.emptyList();
-		}
-		List<Client> result = new ArrayList<>();
-		while (entities.hasNext()) {
-			result.add(hidrateFromEntity(entities.next()));
-		}
-		return result;
+	public List<Long> getClientsIds() {
+		return StreamSupport
+				.stream(Spliterators.spliteratorUnknownSize(
+						datastore.run(Query.newKeyQueryBuilder().setKind(KIND).build()), 0), false)
+				.map(Key::getId).collect(Collectors.toList());
 	}
 
 	public Client getByName(@NonNull String firstName, @NonNull String lastName) {

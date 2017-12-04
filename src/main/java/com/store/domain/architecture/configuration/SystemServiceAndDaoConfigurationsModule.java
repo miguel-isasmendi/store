@@ -12,8 +12,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.store.domain.architecture.dao.schema.MigrationDao;
 import com.store.domain.architecture.dao.schema.impl.DatastoreMigrationDao;
+import com.store.domain.dao.catalog.BundleDao;
 import com.store.domain.dao.catalog.ProductDao;
 import com.store.domain.dao.catalog.SkuDao;
+import com.store.domain.dao.catalog.impl.DatastoreBundleDao;
 import com.store.domain.dao.catalog.impl.DatastoreProductDao;
 import com.store.domain.dao.catalog.impl.DatastoreSkuDao;
 import com.store.domain.dao.client.ClientDao;
@@ -24,12 +26,16 @@ import com.store.domain.dao.registration.UserPendingValidationCodeDao;
 import com.store.domain.dao.registration.impl.DatastoreUserPendingValidationCodeDao;
 import com.store.domain.dao.user.UserDao;
 import com.store.domain.dao.user.impl.DatastoreUserDao;
+import com.store.domain.service.catalog.BundleService;
 import com.store.domain.service.catalog.CatalogCoordinatorService;
 import com.store.domain.service.catalog.ProductService;
 import com.store.domain.service.catalog.SkuService;
+import com.store.domain.service.catalog.impl.CachedBundleService;
 import com.store.domain.service.catalog.impl.CachedProductService;
 import com.store.domain.service.catalog.impl.CachedSkuService;
 import com.store.domain.service.catalog.impl.CatalogCoordinatorServiceImpl;
+import com.store.domain.service.checkout.CheckoutCoordinatorService;
+import com.store.domain.service.checkout.impl.CheckoutCoordinatorServiceImpl;
 import com.store.domain.service.client.ClientService;
 import com.store.domain.service.client.impl.CachedClientService;
 import com.store.domain.service.email.EmailService;
@@ -59,6 +65,8 @@ public class SystemServiceAndDaoConfigurationsModule extends AbstractModule {
 		bind(ClientService.class).to(CachedClientService.class).in(Scopes.SINGLETON);
 		bind(CatalogCoordinatorService.class).to(CatalogCoordinatorServiceImpl.class).in(Scopes.SINGLETON);
 		bind(OrderService.class).to(CachedOrderService.class).in(Scopes.SINGLETON);
+		bind(BundleService.class).to(CachedBundleService.class).in(Scopes.SINGLETON);
+		bind(CheckoutCoordinatorService.class).to(CheckoutCoordinatorServiceImpl.class).in(Scopes.SINGLETON);
 
 		bind(UserRegistrationService.class).to(UserRegistrationServiceImpl.class).in(Scopes.SINGLETON);
 		bind(UserRegistrationCoordinatorService.class).to(UserRegistrationCoordinatorServiceImpl.class)
@@ -81,6 +89,7 @@ public class SystemServiceAndDaoConfigurationsModule extends AbstractModule {
 		bind(SkuDao.class).to(DatastoreSkuDao.class).in(Scopes.SINGLETON);
 		bind(ClientDao.class).to(DatastoreClientDao.class).in(Scopes.SINGLETON);
 		bind(OrderDao.class).to(DatastoreOrderDao.class).in(Scopes.SINGLETON);
+		bind(BundleDao.class).to(DatastoreBundleDao.class).in(Scopes.SINGLETON);
 
 		// Migration dao
 		// TODO should this be here?

@@ -12,7 +12,7 @@ public interface ClientDao {
 
 	public Client getById(Long clientId);
 
-	public List<Client> getList();
+	public List<Long> getClientsIds();
 
 	public Client delete(Long clientId);
 

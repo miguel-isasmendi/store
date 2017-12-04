@@ -14,10 +14,7 @@ public class BundleData {
 	@NonNull
 	private Long bundleId;
 	@NonNull
-	private Long skuId;
-	@NonNull
 	private Date activeFrom;
-	@NonNull
 	private Date activeUntil;
 	@Singular
 	private List<BundleItemData> items;

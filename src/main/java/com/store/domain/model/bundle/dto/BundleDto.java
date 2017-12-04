@@ -17,7 +17,6 @@ public class BundleDto {
 	private Long skuId;
 	@NonNull
 	private Date activeFrom;
-	@NonNull
 	private Date activeUntil;
 	@Singular
 	private List<BundleItemDto> items;

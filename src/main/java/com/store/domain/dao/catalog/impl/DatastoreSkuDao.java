@@ -1,8 +1,5 @@
 package com.store.domain.dao.catalog.impl;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -36,7 +33,7 @@ public class DatastoreSkuDao implements SkuDao {
 
 	private Datastore datastore;
 
-	private static String SKU_KIND = "Sku";
+	private static String KIND = "Sku";
 
 	private static String SKU_PRODUCT_ID = "productId";
 	private static String SKU_MADE_INACTIVE_BY_SKU_ID = "madeInactiveBySkuId";
@@ -49,7 +46,7 @@ public class DatastoreSkuDao implements SkuDao {
 		this.datastore = datastore;
 	}
 
-	private Sku hidrateSkuFromEntity(Entity entity) {
+	private Sku hidrateFromEntity(Entity entity) {
 		return Sku.builder().skuId(entity.getKey().getId()).description(entity.getString(DaoConstants.DESCRIPTION))
 				.price(entity.getDouble(DaoConstants.PRICE)).name(entity.getString(DaoConstants.NAME))
 				.madeInactiveBySkuId((Long) entity.getValue(SKU_MADE_INACTIVE_BY_SKU_ID).get())
@@ -60,42 +57,36 @@ public class DatastoreSkuDao implements SkuDao {
 				.billingType(SkuBillingType.valueOf(entity.getString(SKU_BILLING_TYPE))).build();
 	}
 
-	private List<Sku> makeSkuList(Iterator<Entity> entities) {
-		if (entities == null) {
-			return Collections.emptyList();
-		}
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(entities, 0), false)
-				.map(this::hidrateSkuFromEntity).collect(Collectors.toList());
-	}
-
 	@Override
 	public Sku create(@NonNull SkuCreationData skuData, @NonNull Long userId) {
 		Transaction txn = datastore.newTransaction();
 
 		try {
 			if (skuData.getSkuId() == null) {
-				return hidrateSkuFromEntity(saveNewSku(userId, skuData, Boolean.FALSE, null));
+				return hidrateFromEntity(saveNewSku(userId, skuData, Boolean.FALSE, null));
 			} else {
 				// Deactivating other skus with the same code
-				QueryResults<Entity> queryResults = datastore.run(Query.newEntityQueryBuilder().setKind(SKU_KIND)
-						.setFilter(CompositeFilter.and(PropertyFilter.eq(SKU_PRODUCT_ID, skuData.getProductId()),
-								PropertyFilter.eq(DaoConstants.KEY_FIELD,
-										datastore.newKeyFactory().setKind(SKU_KIND).newKey(skuData.getSkuId()))))
-						.build());
+				QueryResults<Entity> queryResults = datastore
+						.run(Query.newEntityQueryBuilder().setKind(KIND)
+								.setFilter(CompositeFilter.and(
+										PropertyFilter.eq(SKU_PRODUCT_ID, skuData.getProductId()),
+										PropertyFilter.eq(DaoConstants.KEY_FIELD,
+												datastore.newKeyFactory().setKind(KIND).newKey(skuData.getSkuId()))))
+								.build());
 
 				if (!queryResults.hasNext()) {
 					throw new NotFoundDaoException(ErrorConstants
-							.formatError(ErrorConstants.ELEMENT_NOT_FOUND_FOR_ARGUMENTS, SKU_KIND, "skuId = \""
+							.formatError(ErrorConstants.ELEMENT_NOT_FOUND_FOR_ARGUMENTS, KIND, "skuId = \""
 									+ skuData.getSkuId() + "\", " + "productId = \"" + skuData.getProductId() + "\""));
 				}
 
 				Entity alreadySavedSkuEntity = queryResults.next();
 
-				Sku alreadySavedSku = makeSkuList(Arrays.asList(alreadySavedSkuEntity).iterator()).iterator().next();
+				Sku alreadySavedSku = hidrateFromEntity(alreadySavedSkuEntity);
 
 				if (alreadySavedSku.getMadeInactiveBySkuId() != null) {
 					throw new InvalidArgumentsDaoException(
-							ErrorConstants.formatError(ErrorConstants.CANT_INVALIDATE_ELEMENT_UNTIL_ACTIVE, SKU_KIND));
+							ErrorConstants.formatError(ErrorConstants.CANT_INVALIDATE_ELEMENT_UNTIL_ACTIVE, KIND));
 				}
 
 				// if they are really different, I modify the old version
@@ -110,11 +101,11 @@ public class DatastoreSkuDao implements SkuDao {
 
 					txn.commit();
 
-					return hidrateSkuFromEntity(savedEntity);
+					return hidrateFromEntity(savedEntity);
 
 				} else {
 					throw new ConflictDaoException(
-							ErrorConstants.formatError(ErrorConstants.SAME_ELEMENT_CONFLICT, SKU_KIND));
+							ErrorConstants.formatError(ErrorConstants.SAME_ELEMENT_CONFLICT, KIND));
 				}
 			}
 
@@ -126,19 +117,22 @@ public class DatastoreSkuDao implements SkuDao {
 	}
 
 	private Entity saveNewSku(@NonNull Long userId, @NonNull SkuCreationData skuData, @NonNull Boolean isDefault,
-			Long bundleId) {
-		Builder<IncompleteKey> builder = Entity.newBuilder()
-				.setKey(datastore.newKeyFactory().setKind(SKU_KIND).newKey())
+			Long oldBundleId) {
+		Builder<IncompleteKey> builder = Entity.newBuilder().setKey(datastore.newKeyFactory().setKind(KIND).newKey())
 				.set(DaoConstants.PRICE, skuData.getPrice()).set(DaoConstants.DESCRIPTION, skuData.getDescription())
 				.set(DaoConstants.NAME, skuData.getName()).set(SKU_PRODUCT_ID, skuData.getProductId())
 				.setNull(SKU_MADE_INACTIVE_BY_SKU_ID).set(DaoConstants.DEFAULT, isDefault)
 				.set(DaoConstants.CREATED_ON, Timestamp.now()).set(DaoConstants.CREATED_BY_USER_ID, userId)
 				.set(SKU_BILLING_TYPE, skuData.getBillingType().toString());
 
-		if (bundleId == null) {
-			builder.setNull(SKU_BUNDLE_ID);
+		if (skuData.getBundleId() == null) {
+			if (oldBundleId != null) {
+				builder.set(SKU_BUNDLE_ID, oldBundleId);
+			} else {
+				builder.setNull(SKU_BUNDLE_ID);
+			}
 		} else {
-			builder.set(SKU_BUNDLE_ID, bundleId);
+			builder.set(SKU_BUNDLE_ID, skuData.getBundleId());
 		}
 
 		return datastore.put(builder.build());
@@ -146,23 +140,24 @@ public class DatastoreSkuDao implements SkuDao {
 
 	@Override
 	public Sku getById(@NonNull Long skuId) {
-		Key key = datastore.newKeyFactory().setKind(SKU_KIND).newKey(skuId);
+		Key key = datastore.newKeyFactory().setKind(KIND).newKey(skuId);
 		Entity entity = datastore.get(key);
 
 		if (entity == null) {
 			throw new NotFoundDaoException(
-					ErrorConstants.formatError(ErrorConstants.ELEMENT_NOT_FOUND_FOR_ARGUMENTS, SKU_KIND, "skuId"));
+					ErrorConstants.formatError(ErrorConstants.ELEMENT_NOT_FOUND_FOR_ARGUMENTS, KIND, "skuId"));
 		}
 
-		return makeSkuList(Arrays.asList(entity).iterator()).get(0);
+		return hidrateFromEntity(entity);
 	}
 
 	@Override
-	public List<Sku> getSkusByProductId(@NonNull Long productId) {
-		Query<Entity> query = Query.newEntityQueryBuilder().setKind(SKU_KIND).setFilter(CompositeFilter
-				.and(PropertyFilter.eq(SKU_PRODUCT_ID, productId), PropertyFilter.isNull(SKU_MADE_INACTIVE_BY_SKU_ID)))
-				.build();
-
-		return makeSkuList(datastore.run(query));
+	public List<Long> getSkusIdsByProductId(@NonNull Long productId) {
+		return StreamSupport
+				.stream(Spliterators.spliteratorUnknownSize(datastore.run(Query.newKeyQueryBuilder().setKind(KIND)
+						.setFilter(CompositeFilter.and(PropertyFilter.eq(SKU_PRODUCT_ID, productId),
+								PropertyFilter.isNull(SKU_MADE_INACTIVE_BY_SKU_ID)))
+						.build()), 0), false)
+				.map(Key::getId).collect(Collectors.toList());
 	}
 }

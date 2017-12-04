@@ -1,5 +1,7 @@
 package com.store.domain.api.regular;
 
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.GET;
+
 import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.AnnotationBoolean;
@@ -24,7 +26,7 @@ public class UsersApi extends FirebaseRegularUserAuthenticationProtectedApi {
 		this.userService = userService;
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.GET, path = "/store/users/me", apiKeyRequired = AnnotationBoolean.TRUE)
+	@ApiMethod(httpMethod = GET, path = "/store/users/me", apiKeyRequired = AnnotationBoolean.TRUE)
 	public UserDto getLoggedUser(@NonNull User user) throws ServiceException {
 		return UserBuildCoordinator.toDto(userService.getByFirebaseId(user.getId()));
 	}

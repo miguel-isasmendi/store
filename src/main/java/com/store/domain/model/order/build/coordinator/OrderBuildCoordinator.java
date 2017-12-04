@@ -7,11 +7,14 @@ import org.apache.commons.collections.CollectionUtils;
 import com.store.architecture.utils.DateUtils;
 import com.store.domain.model.order.Order;
 import com.store.domain.model.order.OrderItem;
+import com.store.domain.model.order.data.OrderCreationCoordinatorData;
+import com.store.domain.model.order.data.OrderCreationCoordinatorData.OrderCreationCoordinatorDataBuilder;
 import com.store.domain.model.order.data.OrderCreationData;
 import com.store.domain.model.order.data.OrderCreationData.OrderCreationDataBuilder;
 import com.store.domain.model.order.data.OrderData;
 import com.store.domain.model.order.data.OrderData.OrderDataBuilder;
 import com.store.domain.model.order.data.OrderDiscountCreationData;
+import com.store.domain.model.order.data.OrderItemCreationCoordinatorData;
 import com.store.domain.model.order.data.OrderItemCreationData;
 import com.store.domain.model.order.data.OrderItemData;
 import com.store.domain.model.order.data.OrderStatusModificationData;
@@ -23,10 +26,12 @@ import com.store.domain.model.order.dto.OrderItemCreationDto;
 import com.store.domain.model.order.dto.OrderItemDto;
 import com.store.domain.model.order.dto.OrderStatusModificationDto;
 import com.store.domain.model.sku.data.SkuData;
-import com.store.domain.service.catalog.CatalogCoordinatorService;
+import com.store.domain.service.catalog.SkuService;
+
+import lombok.NonNull;
 
 public class OrderBuildCoordinator {
-	public static OrderDto toDto(OrderData order, CatalogCoordinatorService coordinatorService) {
+	public static OrderDto toDto(OrderData order) {
 
 		OrderDtoBuilder builder = OrderDto.builder()
 				.orderContact(OrderContactBuildCoordinator.toDto(order.getOrderContact()))
@@ -46,7 +51,6 @@ public class OrderBuildCoordinator {
 	}
 
 	public static OrderItemDto toDto(OrderItemData orderItem) {
-
 		return OrderItemDto.builder().quantity(orderItem.getQuantity()).skuId(orderItem.getSkuId())
 				.price(orderItem.getPrice()).createdByUserId(orderItem.getCreatedByUserId())
 				.createdOn(orderItem.getCreatedOn()).orderItemId(orderItem.getOrderItemId()).build();
@@ -70,21 +74,38 @@ public class OrderBuildCoordinator {
 		return builder.build();
 	}
 
-	public static OrderItemCreationData toData(OrderItemCreationDto orderItem,
-			CatalogCoordinatorService catalogService) {
-		SkuData sku = catalogService.getSkuById(orderItem.getSkuId());
+	public static OrderItemCreationData toData(@NonNull OrderItemCreationCoordinatorData orderItem,
+			@NonNull SkuService skuService) {
+		SkuData sku = skuService.getById(orderItem.getSkuId());
 
 		return OrderItemCreationData.builder().quantity(orderItem.getQuantity()).skuId(orderItem.getSkuId())
 				.price(sku.getPrice()).build();
 	}
 
-	public static OrderCreationData toData(OrderCreationDto order, CatalogCoordinatorService coordinatorService) {
+	public static OrderCreationData toData(@NonNull OrderCreationCoordinatorData order,
+			@NonNull SkuService skuService) {
+		OrderCreationDataBuilder builder = OrderCreationData.builder().contact(order.getContact())
+				.delivery(order.getDelivery()).discounts(order.getDiscounts());
 
-		OrderCreationDataBuilder builder = OrderCreationData.builder()
+		for (OrderItemCreationCoordinatorData orderItem : order.getItems()) {
+			builder.item(toData(orderItem, skuService));
+		}
+
+		return builder.build();
+	}
+
+	public static OrderItemCreationCoordinatorData toData(OrderItemCreationDto orderItem) {
+		return OrderItemCreationCoordinatorData.builder().quantity(orderItem.getQuantity()).skuId(orderItem.getSkuId())
+				.build();
+	}
+
+	public static OrderCreationCoordinatorData toData(OrderCreationDto order) {
+
+		OrderCreationCoordinatorDataBuilder builder = OrderCreationCoordinatorData.builder()
 				.contact(OrderContactBuildCoordinator.toData(order.getContact()));
 
 		for (OrderItemCreationDto orderItem : order.getItems()) {
-			builder.item(toData(orderItem, coordinatorService));
+			builder.item(toData(orderItem));
 		}
 
 		builder.delivery(OrderDeliveryBuildCoordinator.toData(order.getDelivery()));

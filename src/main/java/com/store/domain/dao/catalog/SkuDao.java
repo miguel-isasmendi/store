@@ -7,7 +7,7 @@ import com.store.domain.model.sku.data.SkuCreationData;
 
 public interface SkuDao {
 
-	public List<Sku> getSkusByProductId(Long productId);
+	public List<Long> getSkusIdsByProductId(Long productId);
 
 	public Sku create(SkuCreationData skudData, Long userId);
 

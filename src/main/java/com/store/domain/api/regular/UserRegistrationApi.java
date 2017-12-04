@@ -1,5 +1,8 @@
 package com.store.domain.api.regular;
 
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.POST;
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.PUT;
+
 import com.google.api.server.spi.ServiceException;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.AnnotationBoolean;
@@ -39,7 +42,7 @@ public class UserRegistrationApi extends FirebaseRegularUserAuthenticationProtec
 		this.userService = userService;
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/store/users/me/verification_code", apiKeyRequired = AnnotationBoolean.TRUE)
+	@ApiMethod(httpMethod = POST, path = "/store/users/me/verification_code", apiKeyRequired = AnnotationBoolean.TRUE)
 	@ExceptionMapping(from = InvalidArgumentsServiceException.class, to = ConflictException.class)
 	public void sendVerificationCode(@NonNull User firebaseUser) throws ServiceException {
 		UserData storeUser = userService.getByFirebaseId(firebaseUser.getId());
@@ -47,7 +50,7 @@ public class UserRegistrationApi extends FirebaseRegularUserAuthenticationProtec
 		userRegistrationService.sendVerificationCode(storeUser);
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.PUT, path = "/store/users/me/verification_code/acceptance", apiKeyRequired = AnnotationBoolean.TRUE)
+	@ApiMethod(httpMethod = PUT, path = "/store/users/me/verification_code/acceptance", apiKeyRequired = AnnotationBoolean.TRUE)
 	@ExceptionMapping(from = InvalidArgumentsServiceException.class, to = BadRequestException.class)
 	public void receiveVerificationCode(@NonNull User firebaseUser,
 			@NonNull VerificationCodeAcceptanceDto verificationCodeAcceptance) throws ServiceException {

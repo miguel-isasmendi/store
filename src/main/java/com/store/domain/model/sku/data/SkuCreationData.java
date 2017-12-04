@@ -22,4 +22,5 @@ public class SkuCreationData {
 	private String description;
 	@NonNull
 	private SkuBillingType billingType;
+	private Long bundleId;
 }

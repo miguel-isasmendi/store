@@ -10,6 +10,7 @@ import com.google.api.server.spi.guice.EndpointsModule;
 import com.google.inject.Scopes;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
+import com.store.architecture.exception.annotation.RequiresExceptionMappings;
 import com.store.architecture.exception.interceptor.ExceptionMapperInterceptor;
 import com.store.architecture.filter.CorsFilter;
 import com.store.architecture.filter.exception.CustomExceptionFilter;
@@ -86,6 +87,9 @@ public class SystemResourcesLoaderModule extends EndpointsModule {
 
 		// Intercepting private APIs
 		bindInterceptor(autenticatedClassesMatcher, Matchers.any(), exceptionInterceptor);
+
+		// Intercepting loose classes requiring exception mappings
+		bindInterceptor(Matchers.annotatedWith(RequiresExceptionMappings.class), Matchers.any(), exceptionInterceptor);
 
 		// Intercepting public APIs
 		bindInterceptor(Matchers.subclassesOf(PublicRegistrationApi.class), Matchers.any(), exceptionInterceptor);

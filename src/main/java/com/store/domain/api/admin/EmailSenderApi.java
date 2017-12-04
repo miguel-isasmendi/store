@@ -1,5 +1,7 @@
 package com.store.domain.api.admin;
 
+import static com.google.api.server.spi.config.ApiMethod.HttpMethod.POST;
+
 import java.util.Date;
 
 import org.apache.commons.lang.StringUtils;
@@ -24,7 +26,7 @@ public class EmailSenderApi extends FirebaseAdminAuthenticationProtectedApi {
 		this.emailService = emailService;
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/admin/store/users/emails/verification-codes")
+	@ApiMethod(httpMethod = POST, path = "/admin/store/users/emails/verification-codes")
 	public void sendVerificationCodeEmail(@NonNull User firebaseAdminUser, UserDto userDto) throws ServiceException {
 
 		UserData userData = UserData.builder().userId(0l).status(UserStatus.NEW).email(userDto.getEmail())
@@ -35,7 +37,7 @@ public class EmailSenderApi extends FirebaseAdminAuthenticationProtectedApi {
 
 	}
 
-	@ApiMethod(httpMethod = ApiMethod.HttpMethod.POST, path = "/admin/store/users/emails/welcome")
+	@ApiMethod(httpMethod = POST, path = "/admin/store/users/emails/welcome")
 	public void sendWelcomeEmail(@NonNull User firebaseAdminUser, UserDto userDto) throws ServiceException {
 
 		UserData userData = UserData.builder().userId(0l).status(UserStatus.NEW).email(userDto.getEmail())
