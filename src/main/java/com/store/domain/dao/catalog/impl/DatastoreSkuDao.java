@@ -160,4 +160,19 @@ public class DatastoreSkuDao implements SkuDao {
 						.build()), 0), false)
 				.map(Key::getId).collect(Collectors.toList());
 	}
+
+	@Override
+	public Sku getByBundleId(@NonNull Long bundleId) {
+		Key key = datastore.newKeyFactory().setKind(KIND).newKey(bundleId);
+
+		QueryResults<Entity> entities = datastore.run(Query.newEntityQueryBuilder().setKind(KIND)
+				.setFilter(PropertyFilter.eq(SKU_BUNDLE_ID, bundleId)).build());
+
+		if (!entities.hasNext()) {
+			throw new NotFoundDaoException(
+					ErrorConstants.formatError(ErrorConstants.ELEMENT_NOT_FOUND_FOR_ARGUMENTS, KIND, "skuId"));
+		}
+
+		return hidrateFromEntity(entities.next());
+	}
 }

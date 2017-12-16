@@ -3,7 +3,7 @@ package com.store.domain.service.catalog;
 import java.util.List;
 
 import com.store.domain.model.bundle.data.BundleCreationData;
-import com.store.domain.model.bundle.data.BundleData;
+import com.store.domain.model.catalog.data.CoordinatorBundleData;
 import com.store.domain.model.product.data.FullProductData;
 import com.store.domain.model.product.data.ProductCreationData;
 
@@ -21,7 +21,9 @@ public interface CatalogCoordinatorService {
 
 	public BundleService getBundleService();
 
-	public BundleData createBundle(Long userId, BundleCreationData bundleCreationData);
+	public CoordinatorBundleData createBundle(Long userId, BundleCreationData bundleCreationData);
 
-	public BundleData getBundleById(Long userId, Long bundleId);
+	public CoordinatorBundleData getBundleById(Long userId, Long bundleId);
+
+	public List<CoordinatorBundleData> getBundles(Long userId);
 }

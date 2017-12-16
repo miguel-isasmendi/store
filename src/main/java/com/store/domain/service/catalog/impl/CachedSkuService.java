@@ -22,10 +22,12 @@ import lombok.NonNull;
 @RequiresExceptionMappings
 public class CachedSkuService implements SkuService {
 	private static final String CACHE_SKU_PREFIX = "sku_";
+	private static final String CACHE_SKU_BUNDLE_ID_PREFIX = CACHE_SKU_PREFIX + "bundle_id_";
 	private static final String CACHE_SKUS_BY_PRODUCT_ID_PREFIX = CACHE_SKU_PREFIX + "ids_by_product_id_";
 
 	private SkuDao skuDao;
 	private CacheHandler<Sku> skuCacheHandler;
+	private CacheHandler<Sku> skuByBundleIdCacheHandler;
 	private CacheHandler<List<Long>> skuByProductIdCacheHandler;
 
 	@Inject
@@ -34,6 +36,9 @@ public class CachedSkuService implements SkuService {
 
 		this.skuCacheHandler = CacheHandler.<Sku>builder().cache(cache).keyGeneratorClosure(Sku::getSkuId)
 				.prefix(CACHE_SKU_PREFIX).build();
+
+		this.skuByBundleIdCacheHandler = CacheHandler.<Sku>builder().cache(cache).keyGeneratorClosure(Sku::getBundleId)
+				.prefix(CACHE_SKU_BUNDLE_ID_PREFIX).build();
 
 		this.skuByProductIdCacheHandler = CacheHandler.<List<Long>>builder().cache(cache)
 				.prefix(CACHE_SKUS_BY_PRODUCT_ID_PREFIX).build();
@@ -79,4 +84,17 @@ public class CachedSkuService implements SkuService {
 		return skusIds.stream().map(this::getById).collect(Collectors.toList());
 	}
 
+	@Override
+	@ExceptionMapping(from = NotFoundDaoException.class, to = InvalidArgumentsServiceException.class)
+	public SkuData getByBundleId(@NonNull Long bundleId) {
+		Sku sku = skuByBundleIdCacheHandler.getFromCacheUsingPartialKey(bundleId);
+
+		if (sku == null) {
+			sku = skuDao.getByBundleId(bundleId);
+
+			skuCacheHandler.putIntoCache(sku);
+		}
+
+		return SkuBuildCoordinatorProvider.toData(sku);
+	}
 }

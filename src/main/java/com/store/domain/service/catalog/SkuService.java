@@ -13,4 +13,6 @@ public interface SkuService {
 
 	public List<SkuData> getSkusByProductId(Long productId);
 
+	public SkuData getByBundleId(Long bundleId);
+
 }

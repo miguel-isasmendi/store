@@ -7,9 +7,9 @@ import com.store.domain.model.product.data.ProductData;
 
 public interface ProductService {
 
-	List<ProductData> create(Long userId, ProductCreationData... prodDataArray);
+	public List<ProductData> create(Long userId, ProductCreationData... prodDataArray);
 
-	ProductData getById(Long productId);
+	public ProductData getById(Long productId);
 
 	public List<ProductData> getProducts();
 

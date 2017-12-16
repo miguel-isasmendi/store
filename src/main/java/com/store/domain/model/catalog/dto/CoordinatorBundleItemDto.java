@@ -1,4 +1,4 @@
-package com.store.domain.model.bundle.dto;
+package com.store.domain.model.catalog.dto;
 
 import java.util.Date;
 
@@ -8,7 +8,7 @@ import lombok.NonNull;
 
 @Getter
 @Builder
-public class BundleItemDto {
+public class CoordinatorBundleItemDto {
 
 	@NonNull
 	private Long bundleId;

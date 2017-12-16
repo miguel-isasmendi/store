@@ -3,7 +3,10 @@ package com.store.domain.dao.catalog.impl;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterators;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.Datastore;
@@ -189,4 +192,11 @@ public class DatastoreBundleDao implements BundleDao {
 		return bundle;
 	}
 
+	@Override
+	public List<Long> getBundlesIds() {
+		return StreamSupport
+				.stream(Spliterators.spliteratorUnknownSize(
+						datastore.run(Query.newKeyQueryBuilder().setKind(KIND).build()), 0), false)
+				.map(Key::getId).collect(Collectors.toList());
+	}
 }

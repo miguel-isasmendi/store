@@ -8,6 +8,8 @@ import com.store.architecture.exception.service.InvalidArgumentsServiceException
 import com.store.domain.model.bundle.data.BundleCreationData;
 import com.store.domain.model.bundle.data.BundleCreationItemData;
 import com.store.domain.model.bundle.data.BundleData;
+import com.store.domain.model.catalog.build.coordinator.ComplexBundleBuildCoordinator;
+import com.store.domain.model.catalog.data.CoordinatorBundleData;
 import com.store.domain.model.product.build.coordinator.ProductBuildCoordinatorProvider;
 import com.store.domain.model.product.data.FullProductData;
 import com.store.domain.model.product.data.ProductCreationData;
@@ -69,17 +71,17 @@ public class CatalogCoordinatorServiceImpl implements CatalogCoordinatorService 
 	}
 
 	@Override
-	public BundleData createBundle(@NonNull Long userId, @NonNull BundleCreationData bundleCreationData) {
-
-		Long skuId = bundleCreationData.getSkuId();
+	public CoordinatorBundleData createBundle(@NonNull Long userId, @NonNull BundleCreationData bundleCreationData) {
 
 		// Checking skus existance
 		bundleCreationData.getItems().stream().map(BundleCreationItemData::getSkuId).map(skuService::getById);
 
-		if (skuId != null) {
-			productService.getById(bundleCreationData.getProductId());
+		SkuData sku = null;
+		ProductData product = null;
 
-			SkuData sku = skuService.getById(skuId);
+		if (bundleCreationData.getSkuId() != null) {
+			product = productService.getById(bundleCreationData.getProductId());
+			sku = skuService.getById(bundleCreationData.getSkuId());
 
 			if (sku.getProductId().longValue() != bundleCreationData.getProductId().longValue()) {
 				throw new InvalidArgumentsServiceException(
@@ -87,12 +89,11 @@ public class CatalogCoordinatorServiceImpl implements CatalogCoordinatorService 
 								bundleCreationData.getProductId()));
 			}
 
-			skuId = sku.getSkuId();
 		}
 
 		BundleData bundle = bundleService.create(userId, bundleCreationData);
 
-		if (skuId == null) {
+		if (sku == null) {
 			try {
 
 				if (bundleCreationData.getProductId() == null) {
@@ -100,24 +101,39 @@ public class CatalogCoordinatorServiceImpl implements CatalogCoordinatorService 
 							"It's required to indicate the product id for a sku creation");
 				}
 
-				skuId = skuService.create(userId,
+				product = productService.getById(bundleCreationData.getProductId());
+
+				sku = skuService.create(userId,
 						SkuCreationData.builder().billingType(bundleCreationData.getBillingType())
 								.description(bundleCreationData.getDescription()).name(bundleCreationData.getName())
 								.price(bundleCreationData.getPrice()).productId(bundleCreationData.getProductId())
-								.bundleId(bundle.getBundleId()).build())
-						.getSkuId();
+								.bundleId(bundle.getBundleId()).build());
+
 			} catch (RuntimeException e) {
 				bundleService.deleteById(bundle.getBundleId());
 				throw e;
 			}
 		}
 
-		return bundle;
+		return ComplexBundleBuildCoordinator.toData(bundle, product, sku);
 	}
 
 	@Override
-	public BundleData getBundleById(Long userId, Long bundleId) {
-		return bundleService.getById(bundleId);
+	public CoordinatorBundleData getBundleById(@NonNull Long userId, @NonNull Long bundleId) {
+		BundleData bundle = bundleService.getById(bundleId);
+		SkuData sku = skuService.getByBundleId(bundle.getBundleId());
+		ProductData product = productService.getById(sku.getProductId());
+
+		return ComplexBundleBuildCoordinator.toData(bundle, product, sku);
 	}
 
+	@Override
+	public List<CoordinatorBundleData> getBundles(@NonNull Long userId) {
+		return bundleService.getBundles().stream().map(bundle -> {
+			SkuData sku = skuService.getByBundleId(bundle.getBundleId());
+			ProductData product = productService.getById(sku.getProductId());
+
+			return ComplexBundleBuildCoordinator.toData(bundle, product, sku);
+		}).collect(Collectors.toList());
+	}
 }

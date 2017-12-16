@@ -12,4 +12,6 @@ public interface SkuDao {
 	public Sku create(SkuCreationData skudData, Long userId);
 
 	public Sku getById(Long skuId);
+
+	public Sku getByBundleId(Long bundleId);
 }

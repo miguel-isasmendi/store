@@ -70,7 +70,7 @@
 		</profile>
 
 		<profile>
-			<id>GetSwaggerDoc</id>
+			<id>BuildOpenApi</id>
 			<activation>
 				<property>
 					<name>BuildOpenApi</name>

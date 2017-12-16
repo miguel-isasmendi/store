@@ -28,7 +28,8 @@ import com.store.architecture.validator.ObjectBuildConversionOverseer;
 import com.store.domain.architecture.api.regular.FirebaseRegularUserAuthenticationProtectedApi;
 import com.store.domain.model.bundle.build.coordinator.BundleBuildCoordinator;
 import com.store.domain.model.bundle.dto.BundleCreationDto;
-import com.store.domain.model.bundle.dto.BundleDto;
+import com.store.domain.model.catalog.build.coordinator.ComplexBundleBuildCoordinator;
+import com.store.domain.model.catalog.dto.CoordinatorBundleDto;
 import com.store.domain.model.product.build.coordinator.ProductBuildCoordinatorProvider;
 import com.store.domain.model.product.build.validator.ProductCreationValidatorProvider;
 import com.store.domain.model.product.data.FullProductData;
@@ -133,18 +134,27 @@ public class CatalogApi extends FirebaseRegularUserAuthenticationProtectedApi {
 
 	@ApiMethod(httpMethod = POST, path = "/store/bundles")
 	@ExceptionMapping(from = InvalidArgumentsDaoException.class, to = NotFoundException.class)
-	public BundleDto createBundle(@NonNull User user, @NonNull BundleCreationDto bundleCreationDto)
+	public CoordinatorBundleDto createBundle(@NonNull User user, @NonNull BundleCreationDto bundleCreationDto)
 			throws ServiceException {
 		UserData storeUser = this.userService.getByFirebaseId(user.getId());
 
-		return BundleBuildCoordinator.toDto(catalogCoordinatorService.createBundle(storeUser.getUserId(),
+		return ComplexBundleBuildCoordinator.toDto(catalogCoordinatorService.createBundle(storeUser.getUserId(),
 				BundleBuildCoordinator.toData(bundleCreationDto)));
 	}
 
 	@ApiMethod(httpMethod = GET, path = "/store/bundles/{bundle_id}")
-	public BundleDto getBundle(@NonNull User user, @NonNull @Named("bundle_id") Long bundleId) throws ServiceException {
+	public CoordinatorBundleDto getBundle(@NonNull User user, @NonNull @Named("bundle_id") Long bundleId) {
 		UserData storeUser = this.userService.getByFirebaseId(user.getId());
 
-		return BundleBuildCoordinator.toDto(catalogCoordinatorService.getBundleById(storeUser.getUserId(), bundleId));
+		return ComplexBundleBuildCoordinator
+				.toDto(catalogCoordinatorService.getBundleById(storeUser.getUserId(), bundleId));
+	}
+
+	@ApiMethod(httpMethod = GET, path = "/store/bundles")
+	public List<CoordinatorBundleDto> getBundles(@NonNull User user) {
+		UserData storeUser = this.userService.getByFirebaseId(user.getId());
+
+		return catalogCoordinatorService.getBundles(storeUser.getUserId()).stream()
+				.map(ComplexBundleBuildCoordinator::toDto).collect(Collectors.toList());
 	}
 }
