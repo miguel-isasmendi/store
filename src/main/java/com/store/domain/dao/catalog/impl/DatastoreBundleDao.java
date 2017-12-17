@@ -69,7 +69,7 @@ public class DatastoreBundleDao implements BundleDao {
 			for (int j = 0; j < items.length; j++) {
 
 				BundleCreationItemData item = bundleCreationData.getItems().get(j);
-				items[j] = Entity.newBuilder().setKey(datastore.newKeyFactory().setKind(KIND).newKey())
+				items[j] = Entity.newBuilder().setKey(datastore.newKeyFactory().setKind(BUNDLE_ITEM_KIND).newKey())
 						.set(BUNDLE_ID, bundleKey.getId()).set(DaoConstants.QUANTITY, item.getQuantity())
 						.set(SKU_ID, item.getSkuId()).set(DaoConstants.CREATED_ON, Timestamp.now())
 						.set(DaoConstants.CREATED_BY_USER_ID, userId).build();

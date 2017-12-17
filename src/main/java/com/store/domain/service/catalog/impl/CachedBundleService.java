@@ -40,6 +40,7 @@ public class CachedBundleService implements BundleService {
 		Bundle bundle = bundleDao.create(userId, bundleCreationData);
 
 		bundleCacheHandler.putIntoCache(bundle);
+		bundleIdsCacheHandler.deleteFromCache();
 
 		return BundleBuildCoordinator.toData(bundle);
 	}

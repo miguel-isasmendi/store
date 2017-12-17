@@ -51,6 +51,13 @@ public class CacheHandler<T> {
 		return cache.delete(prependKeyPrefixTo(elementKey));
 	}
 
+	public boolean deleteFromCache() {
+		if (keyGeneratorClosure == null) {
+			return deleteFromCacheUsingPartialKey(null);
+		} else {
+			return deleteFromCache(null);
+		}
+	}
 	@SuppressWarnings("unchecked")
 	public T getFromCache(T element) {
 		return (T) cache.get(generateKeyFor(element));
